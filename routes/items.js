@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const { DataResponse, ErrorResponse } = require("../models/payload")
 const Item = require('../models/item')
 const util = require('../middleware/validate-token')
 const { logger, LogMessage } = require('../config/winston');
@@ -10,10 +11,10 @@ router.get('/', util.getUser, async (req, res) => {
         const query = Item.find({ 'createdBy': { $ne: res.id } })
         items = await query.select()
         logger.info("%o", new LogMessage("Items", "Get eligible items", "Successfully retrieved items.", { "userInfo": res.id }))
-        res.json({ items })
+        res.json(new DataResponse({ items }));
     } catch (err) {
         logger.info("%o", new LogMessage("Items", "Get eligible items", "Unable to retrieve items.", { "userInfo": res.id, "error": err.message }))
-        res.status(500).json({ message: err.message })
+        res.status(500).json(new ErrorResponse(err.message));
     }
 })
 
@@ -22,16 +23,17 @@ router.get('/all', util.getUser, async (req, res) => {
     try {
         const items = await Item.find()
         logger.info("%o", new LogMessage("Items", "Get all items.", "Successfully retrieved items."))
-        res.json(items)
+        res.json(new DataResponse({ items }));
     } catch (err) {
         logger.info("%o", new LogMessage("Items", "Get all items.", "Unable to retrieve items.", {"error": err.message }))
-        res.status(500).json({ message: err.message })
+        res.status(500).json(new ErrorResponse(err.message));
     }
 })
 
 // Get one item
 router.get('/:id', getItem, (req, res) => {
-    res.json(res.item)
+    const item = res.item
+    res.json(new DataResponse({ item }));
 })
 
 // Get all items for single user
@@ -40,10 +42,10 @@ router.get('/user/:id', async (req, res) => {
         const query = Item.find({ 'createdBy': req.params.id })
         items = await query.select()
         logger.info("%o", new LogMessage("Items", "Get items created by user.", "Successfully retrieved items.", {"userInfo": req.params.id }))
-        res.json(items)
+        res.json(new DataResponse({ items }));
     } catch (err) {
         logger.info("%o", new LogMessage("Items", "Get items created by user.", "Unable to retrieve items.", {"userInfo": req.params.id, "error": err.message }))
-        return res.status(500).json({ message: err.message })
+        res.status(500).json(new ErrorResponse(err.message));
     }
 })
 
@@ -62,10 +64,10 @@ router.post('/', util.getUser, async (req, res) => {
     try {
         const newItem = await item.save()
         logger.info("%o", new LogMessage("Items", "Create item.", "Successfully created item.", {"itemInfo": newItem._id }))
-        res.status(201).json(newItem)
+        res.status(201).json(new DataResponse({ newItem }));
     } catch (err) {
         logger.info("%o", new LogMessage("Items", "Create item.", "Unable to create item.", {"itemInfo": item, "error": err.message }))
-        res.status(400).json({ message: err.message })
+        res.status(500).json(new ErrorResponse(err.message));
     }
 })
 
@@ -98,7 +100,7 @@ router.patch('/:id', getItem, async (req, res) => {
     try {
         res.item.lastEditDate = Date.now()
         const updatedItem = await res.item.save()
-        res.json(updatedItem)
+        res.json(new DataResponse({ updatedItem }));
     } catch (err) {
         logger.info("%o", new LogMessage("Items", "Update item.", "Unable to update item.", {"itemInfo": res.item._id, "error": err.message }))
         res.status(400).json({ message: err.message })
@@ -111,9 +113,10 @@ router.delete('/:id', getItem, async (req, res) => {
         await res.item.remove()
         logger.info("%o", new LogMessage("Items", "Delete item.", "Successfully deleted item.", {"itemInfo": res.item._id }))
         res.json({ message: 'Deleted the item' })
+        res.json(new DataResponse());
     } catch (err) {
         logger.info("%o", new LogMessage("Items", "Delete item.", "Unable to delete item.", {"itemInfo": res.item._id, "error": err.message }))
-        return res.status(500).json({ message: err.message })
+        res.status(500).json(new ErrorResponse(err.message));
     }
 })
 
@@ -123,12 +126,11 @@ async function getItem(req, res, next) {
         item = await Item.findById(req.params.id)
         if (item == null) {
             logger.info("%o", new LogMessage("Items", "Get item.", "Unable to retrieve item.", {"itemInfo": req.params.id }))
-            return res.status(404).json({
-                message: 'Unable to find a item with that id'} )
+            res.status(500).json(new ErrorResponse("Unable to find an item with that id."))
         }
     } catch (err) {
         logger.info("%o", new LogMessage("Items", "Get item.", "Failed to retrieve item.", {"itemInfo": req.params.id, "error": err.message }))
-        return res.status(500).json({ message: err.message })
+        res.status(500).json(new ErrorResponse(err.message));
     }
 
     res.item = item

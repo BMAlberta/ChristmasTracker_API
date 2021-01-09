@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const { registerValidation, loginValidation } = require("../middleware/validation")
 const User = require("../models/user")
+const { DataResponse, ErrorResponse } = require("../models/payload")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const { logger, LogMessage } = require('../config/winston');
@@ -13,7 +14,7 @@ router.post("/register", async (req, res) => {
     if (error) {
         var logInfo = new LogMessage("Auth", "register", "Validation Error", { "message": error.details[0].message })
         logger.info("%o", logInfo)
-        return res.status(400).json({ error: error.details[0].message })
+        return res.status(400).json(new ErrorResponse( error.details[0].message));
     }
 
     const emailExists = await User.findOne({ email: req.body.email })
@@ -21,7 +22,7 @@ router.post("/register", async (req, res) => {
     if (emailExists) {
         var logInfo = new LogMessage("Auth", "register", "Email already exists.", { "userInfo": req.body.email })
         logger.info("%o", logInfo)
-        return res.status(400).json({ error: "An account with that email already exists." })
+        return res.status(400).json(new ErrorResponse( "An account with that email already exists."));
     }
 
     const salt = await bcrypt.genSalt(10)
@@ -38,11 +39,11 @@ router.post("/register", async (req, res) => {
         const savedUser = await user.save()
         var logInfo = new LogMessage("Auth", "register", "User successfully created.", { "userId": savedUser._id })
         logger.info("%o", logInfo)
-        res.json({ userId: savedUser._id })
+        res.json(new DataResponse({ userId: savedUser._id }));
     } catch (err) {
         var logInfo = new LogMessage("Auth", "register", "Failed to create user.", { "message": req.body.email })
         logger.info("%o", logInfo)
-        res.status(400).json({ message: err.message })
+        res.status(400).json(new ErrorResponse( err.message));
     }
 })
 
@@ -54,21 +55,21 @@ router.post("/login", async (req, res) => {
     if (error) {
         var logInfo = new LogMessage("Auth", "login", "Input validation failed.", { "error": error.details[0].message })
         logger.info("%o", logInfo)
-        return res.status(400).json({ error: error.details[0].message });
+        return res.status(400).json(new ErrorResponse( error.details[0].message ));
     }
     const user = await User.findOne({ email: req.body.email });
 
     if (!user) {
         var logInfo = new LogMessage("Auth", "login", "Unable to find user.", { "userId": req.body.email })
         logger.info("%o", logInfo)
-        return res.status(400).json({ error: "User credentials are invalid" });
+        return res.status(400).json(new ErrorResponse( "User credentials are invalid"));
     }
 
     const validPassword = await bcrypt.compare(req.body.password, user.pwd);
     if (!validPassword) {
         var logInfo = new LogMessage("Auth", "login", "Password validation failed.", { "userId": req.body.email })
         logger.info("%o", logInfo)
-        return res.status(400).json({ error: "User credentials are invalid" });
+        return res.status(400).json(new ErrorResponse("User credentials are invalid"));
     }
 
     var loginIp = getCallerIP(req)
@@ -91,7 +92,8 @@ router.post("/login", async (req, res) => {
 
     var logInfo = new LogMessage("Auth", "login", "Login successful.", { "name": user.email, "id": user._id, "token": token })
     logger.debug("%o", logInfo)
-    res.header("auth-token", token).json({ token });
+
+    res.header("auth-token", token).json(new DataResponse({token}));
 });
 
 

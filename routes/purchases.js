@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const { DataResponse, ErrorResponse } = require("../models/payload")
 const Item = require('../models/item')
 const { logger, LogMessage } = require('../config/winston');
 
@@ -8,10 +9,10 @@ router.post('/', async (req, res) => {
     try {
         const updatedItem = await Item.findByIdAndUpdate({ _id: req.body.itemId }, { purchased: "true", lastEditDate: Date.now() }, { new: true })
         logger.info("%o", new LogMessage("Purchases", "Mark purchased.", "Successfully marked item as purchased.", { "itemInfo": req.body.itemId }))
-        res.status(200).json(updatedItem)
+        res.header("auth-token", token).json(new DataResponse({updatedItem}));
     } catch (err) {
         logger.info("%o", new LogMessage("Purchases", "Mark purchased.", "Item cannot marked as purchased.", { "itemInfo": req.body.itemId, "error": err.message }))
-        res.status(400).json({ message: err.message })
+        res.status(400).json(new ErrorResponse( err.message));
     }
 })
 
