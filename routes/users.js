@@ -2,9 +2,11 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/user')
 const { DataResponse, ErrorResponse } = require("../models/payload")
+const util = require('../middleware/validate-token')
+const { logger, LogMessage } = require('../config/winston');
 
 // Get all users
-router.get('/', async (req, res) => {
+router.get('/list', async (_, res) => {
     try {
         const users = await User.find()
         logger.info("%o", new LogMessage("Users", "Get all users", "Successfully retrieved users."))
@@ -15,8 +17,20 @@ router.get('/', async (req, res) => {
     }
 })
 
+// Get current user details
+router.get('/', util.getUser, async (_, res) => {
+    try {
+        const user = await User.findById(res.id, { email: 1, firstName: 1, lastName: 1, creationDate: 1, lastLogInLocation: 1, lastLogInDate: 1,lastPasswordChange: 1, _id: 1 })
+        logger.info("%o", new LogMessage("Users", "Get current user", "Successfully retrieved user."))
+        res.json(new DataResponse({ user }));
+    } catch (err) {
+        logger.info("%o", new LogMessage("Users", "Get current user", "Unable to retrieve user data.", { "error": err.message }))
+        res.status(500).json(new ErrorResponse(err.message));
+    }
+})
+
 // Get one user
-router.get('/:id', getUser, (req, res) => {
+router.get('/:id', getUser, (_, res) => {
     const user = res.user
     res.json(new DataResponse({ user }));
 
@@ -26,7 +40,9 @@ router.get('/:id', getUser, (req, res) => {
 router.post('/', async (req, res) => {
     const user = new User({
         firstName: req.body.firstName,
-        lastName: req.body.lastName
+        lastName: req.body.lastName,
+        email: req.body.email,
+        pwd: req.body.password
     })
 
     try {
@@ -66,7 +82,7 @@ router.patch('/:id', getUser, async (req, res) => {
 })
 
 // Delete a user
-router.delete('/:id', getUser, async (req, res) => {
+router.delete('/:id', getUser, async (_, res) => {
     try {
         await res.user.remove()
         logger.info("%o", new LogMessage("Users", "Delete user", "Successfully deleted user.", { "userInfo": res.user._id }))

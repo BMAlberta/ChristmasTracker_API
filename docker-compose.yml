@@ -1,0 +1,38 @@
+version: '3'
+services:
+  app:
+    container_name: app
+    restart: always
+    build:
+      context: .
+      args:
+        MONGO_INITDB_ROOT_USERNAME: admin
+        MONGO_INITDB_ROOT_PASSWORD:
+        AUTH_TYPE: TOKEN
+        TOKEN_SECRET:
+        EXPIRY_TIME: 60m
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+  mongo:
+    container_name: mongo
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME:
+      MONGO_INITDB_ROOT_PASSWORD:
+    volumes:
+      - ./data:/data/db
+    ports:
+      - "27017:27017"
+  mongo-express:
+    image: mongo-express
+    restart: always
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: 
+      ME_CONFIG_MONGODB_SERVER: mongo
+    depends_on:
+      - mongo
+    ports:
+      - "8081:8081"

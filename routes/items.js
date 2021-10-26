@@ -5,8 +5,8 @@ const Item = require('../models/item')
 const util = require('../middleware/validate-token')
 const { logger, LogMessage } = require('../config/winston');
 
-// Get items for all users
-router.get('/', util.getUser, async (req, res) => {
+// Get items for all users (excluding the current user)
+router.get('/unowned', util.getUser, async (_, res) => {
     try {
         const query = Item.find({ 'createdBy': { $ne: res.id } })
         items = await query.select()
@@ -18,10 +18,89 @@ router.get('/', util.getUser, async (req, res) => {
     }
 })
 
-// Get all items
-router.get('/all', util.getUser, async (req, res) => {
+router.get('/owned', util.getUser, async (_, res) => {
     try {
-        const items = await Item.find()
+        const query = Item.find({ 'createdBy': { $eq: res.id } })
+        items = await query.select()
+        logger.info("%o", new LogMessage("Items", "Get eligible items", "Successfully retrieved items.", { "userInfo": res.id }))
+        res.json(new DataResponse({ items }));
+    } catch (err) {
+        logger.info("%o", new LogMessage("Items", "Get eligible items", "Unable to retrieve items.", { "userInfo": res.id, "error": err.message }))
+        res.status(500).json(new ErrorResponse(err.message));
+    }
+})
+
+router.get('/groupedByUser', util.getUser, async (_, res) => {
+  try {
+    let listOverviews = await Item.aggregate([
+  {
+    '$addFields': {
+      'convertedUserId': {
+        '$toObjectId': '$createdBy'
+      }
+    }
+  }, {
+    '$match': {
+      'createdBy': {
+        '$ne': '60d691edaeac5d4ca05550cc'
+      }
+    }
+  }, {
+    '$group': {
+      '_id': '$convertedUserId',
+      'totalItems': {
+        '$sum': 1
+      },
+      'purchasedItems': {
+        '$sum': {
+          '$cond': [
+            '$purchased', 1, 0
+          ]
+        }
+      }
+    }
+  }, {
+    '$lookup': {
+      'from': 'users',
+      'localField': '_id',
+      'foreignField': '_id',
+      'as': 'user'
+    }
+  }, {
+    '$unwind': {
+      'path': '$user'
+    }
+  }, {
+    '$set': {
+      'user.rawId': {
+        '$toString': '$_id'
+      }
+    }
+  }, {
+    '$project': {
+      'totalItems': 1,
+      'purchasedItems': 1,
+      'user.firstName': 1,
+      'user.lastName': 1,
+      'user.rawId': 1
+    }
+  }
+])
+  logger.info("%o", new LogMessage("Items", "Get user list overview", "Successfully retrieved overviews.", { "userInfo": res.id }))
+    res.json(new DataResponse({ listOverviews }));
+  } catch (err) {
+    logger.info("%o", new LogMessage("Items", "Get user list overview", "Unable to retrieve overviews.", { "userInfo": res.id, "error": err.message }))
+    res.status(500).json(new ErrorResponse(err.message));
+  }
+})
+
+
+// Get all items (including current user)
+router.get('/list', util.getUser, async (_, res) => {
+    try {
+        const items = await Item.find().lean()
+
+        canRetractPurchase(items, res.id)
         logger.info("%o", new LogMessage("Items", "Get all items.", "Successfully retrieved items."))
         res.json(new DataResponse({ items }));
     } catch (err) {
@@ -30,22 +109,30 @@ router.get('/all', util.getUser, async (req, res) => {
     }
 })
 
-// Get one item
-router.get('/:id', getItem, (req, res) => {
-    const item = res.item
-    res.json(new DataResponse({ item }));
-})
-
 // Get all items for single user
-router.get('/user/:id', async (req, res) => {
+router.get('/user/:id', util.getUser, async (req, res) => {
     try {
-        const query = Item.find({ 'createdBy': req.params.id })
-        items = await query.select()
+        const query = Item.find({ 'createdBy': { $eq: req.params.id } })
+        items = await query.select().lean()
+        canRetractPurchase(items, res.id)
         logger.info("%o", new LogMessage("Items", "Get items created by user.", "Successfully retrieved items.", {"userInfo": req.params.id }))
         res.json(new DataResponse({ items }));
     } catch (err) {
         logger.info("%o", new LogMessage("Items", "Get items created by user.", "Unable to retrieve items.", {"userInfo": req.params.id, "error": err.message }))
         res.status(500).json(new ErrorResponse(err.message));
+    }
+})
+
+  function canRetractPurchase(items, user) {
+    console.log(user)
+  items.forEach(item => item['retractablePurchase'] = (item.purchasedBy == user));
+}
+
+// Get one item
+router.get('/:id', getItem, (_, res) => {
+    const item = res.item
+    if (item != null) {
+        res.json(new DataResponse({ item }));
     }
 })
 
@@ -57,7 +144,6 @@ router.post('/', util.getUser, async (req, res) => {
         link: req.body.link,
         price: req.body.price,
         quantity: req.body.quantity,
-        category: req.body.category,
         createdBy: res.id
     })
 
@@ -108,14 +194,14 @@ router.patch('/:id', getItem, async (req, res) => {
 })
 
 // Delete an item
-router.delete('/:id', getItem, async (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
-        await res.item.remove()
-        logger.info("%o", new LogMessage("Items", "Delete item.", "Successfully deleted item.", {"itemInfo": res.item._id }))
-        res.json({ message: 'Deleted the item' })
-        res.json(new DataResponse());
+        const item = await Item.findByIdAndRemove(req.params.id)
+        logger.info("%o", new LogMessage("Items", "Delete item.", "Successfully deleted item.", {"itemInfo": req.params.id }))
+        // res.json({ message: 'Deleted the item' })
+        res.json(new DataResponse({ item }));
     } catch (err) {
-        logger.info("%o", new LogMessage("Items", "Delete item.", "Unable to delete item.", {"itemInfo": res.item._id, "error": err.message }))
+        logger.info("%o", new LogMessage("Items", "Delete item.", "Unable to delete item.", {"itemInfo": req.params.id, "error": err.message }))
         res.status(500).json(new ErrorResponse(err.message));
     }
 })
@@ -127,15 +213,16 @@ async function getItem(req, res, next) {
         if (item == null) {
             logger.info("%o", new LogMessage("Items", "Get item.", "Unable to retrieve item.", {"itemInfo": req.params.id }))
             res.status(500).json(new ErrorResponse("Unable to find an item with that id."))
+            next()
+        } else {
+          res.item = item
+          logger.info("%o", new LogMessage("Items", "Get item.", "Successfully retrieved item.", {"itemInfo": item.id }))
+          next()
         }
     } catch (err) {
         logger.info("%o", new LogMessage("Items", "Get item.", "Failed to retrieve item.", {"itemInfo": req.params.id, "error": err.message }))
         res.status(500).json(new ErrorResponse(err.message));
     }
-
-    res.item = item
-    logger.info("%o", new LogMessage("Items", "Get item.", "Successfully retrieved item.", {"itemInfo": req.params.id }))
-    next()
 }
 
 module.exports = router

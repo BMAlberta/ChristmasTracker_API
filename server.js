@@ -1,10 +1,9 @@
 require('dotenv').config()
+require("./config/db")
 
 const express = require('express')
 var createError = require('http-errors');
 const app = express()
-const db = require("./config/db")
-const bodyParser = require("body-parser")
 const cors = require("cors")
 const jwtValidation = require("./middleware/validate-token")
 const morgan = require('morgan')
@@ -20,15 +19,13 @@ const authRouter = require('./routes/auth')
 app.use(cors());
 
 // parse requests of content-type - application/json
-app.use(bodyParser.json());
+app.use(express.json());
 
 // parse requests of content-type - application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded());
 
-app.use(express.json())
 const format = morganJson(':date[iso] :method :url :status :remote-addr :response-time ms');
 
-// app.use(morgan(':method :url :status :res[content-length] - :response-time ms'/*, { stream: winston.stream }*/));
 app.use(morgan(format, { stream: networkLogger.stream }));
 
 
@@ -37,13 +34,20 @@ app.use('/' + process.env.BASE_API_BATH + '/items', jwtValidation.verifyToken, i
 app.use('/' + process.env.BASE_API_BATH + '/purchases', jwtValidation.verifyToken, purchasedRouter)
 app.use('/' + process.env.BASE_API_BATH + '/auth', authRouter)
 
+
+// simple route
+app.get("/", (_, res) => {
+  res.json({ message: "Welcome to list application." });
+});
+
+
 // catch 404 and forward to error handler
-app.use(function (req, res, next) {
+app.use(function (_, _, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function (err, req, res, next) {
+app.use(function (err, req, res, _) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   console.log(process.env.NODE_ENV)
@@ -57,11 +61,6 @@ app.use(function (err, req, res, next) {
   res.json({ message: err.message })
 });
 
-// simple route
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to list application." });
-});
-
 app.listen(3000)
-var logInfo = new LogMessage("Server", "Startup", "Application is running.", { "port": 3000 })
+var logInfo = new LogMessage("Server", "Startup", "Application is running.", { "port": process.env.API_PORT })
 logger.info("%o", logInfo)

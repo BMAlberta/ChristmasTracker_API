@@ -1,10 +1,11 @@
 const express = require('express')
 const router = express.Router()
-const { registerValidation, loginValidation } = require("../middleware/validation")
+const { registerValidation, loginValidation, passwordValidation } = require("../middleware/validation")
 const User = require("../models/user")
 const { DataResponse, ErrorResponse } = require("../models/payload")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
+const util = require('../middleware/validate-token')
 const { logger, LogMessage } = require('../config/winston');
 
 router.post("/register", async (req, res) => {
@@ -75,7 +76,7 @@ router.post("/login", async (req, res) => {
     var loginIp = getCallerIP(req)
 
     try {
-        const updatedUser = await User.findByIdAndUpdate({ _id: user._id }, { lastLogInLocation: loginIp, lastLogInDate: Date.now() }, { new: true })
+        await User.findByIdAndUpdate({ _id: user._id }, { lastLogInLocation: loginIp, lastLogInDate: Date.now() }, { new: true })
         var logInfo = new LogMessage("Auth", "login", "Updated login IP.", { "user": user._id, "ip": loginIp })
         logger.info("%o", logInfo)
     } catch (err) {
@@ -88,12 +89,46 @@ router.post("/login", async (req, res) => {
         name: user.email,
         id: user._id
     }, process.env.TOKEN_SECRET, { expiresIn: process.env.EXPIRY_TIME })
+    console.log(process.env.EXPIRY_TIME)
 
 
     var logInfo = new LogMessage("Auth", "login", "Login successful.", { "name": user.email, "id": user._id, "token": token })
     logger.debug("%o", logInfo)
 
     res.header("auth-token", token).json(new DataResponse({token}));
+});
+
+// Update password
+router.post("/password/update", util.getUser, async (req, res) => {
+    try {
+      const user = await User.findOne({ _id: res.id});
+      const validOldPassword = await bcrypt.compare(req.body.oldPassword, user.pwd);
+      if (!validOldPassword) {
+          var logInfo = new LogMessage("Auth", "login", "Password validation failed.", { "userId": req.id })
+          logger.info("%o", logInfo)
+          return res.status(400).json(new ErrorResponse("Old password is incorrect."));
+      }
+
+      const validPassword = passwordValidation(req.body);
+      if (!validPassword) {
+        var logInfo = new LogMessage("Auth", "passwordReset", "New password validation failed.", { "userId": req.id })
+        logger.info("%o", logInfo)
+        return res.status(400).json(new ErrorResponse("New password does not meet requirements."));
+      }
+
+      const salt = await bcrypt.genSalt(10)
+      const saltedPassword = await bcrypt.hash(req.body.newPassword, salt)
+
+      await User.findByIdAndUpdate({ _id: user._id }, { pwd: saltedPassword, lastPasswordChange: Date.now() })
+      var logInfo = new LogMessage("Auth", "passwordReset", "Password Reset successful.", { "id": user._id })
+      logger.debug("%o", logInfo)
+      res.json(new DataResponse({ userId: user._id }));
+
+    } catch (err) {
+      var logInfo = new LogMessage("Auth", "passwordReset", "Password reset failed.", { "userId": user._id })
+      logger.info("%o", logInfo)
+      return res.status(400).json(new ErrorResponse("Unable to update password."));
+    }
 });
 
 

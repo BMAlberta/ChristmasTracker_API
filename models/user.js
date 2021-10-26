@@ -39,6 +39,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: false,
         default: "No-IP"
+    },
+    lastPasswordChange: {
+        type: Date,
+        required: false,
+        default: Date.now
     }
 })
 

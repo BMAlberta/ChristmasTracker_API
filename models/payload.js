@@ -1,21 +1,23 @@
-function Response(error = null, payload) {
-    if (error != null) {
-        this.error = { message: error }
-    } else {
-      this.error = {}
-    }
-
-    if (payload != null) {
-        this.payload = payload
+class Response {
+  constructor(error = null, payload) {
+      if (error != null) {
+          this.error = { message: error }
       } else {
-        this.payload = {}
+        this.error = {}
+      }
+
+      if (payload != null) {
+          this.payload = payload
+        } else {
+          this.payload = {}
+        }
       }
 }
 
 
+
 function DataResponse(payload) {
     return new Response(null, payload)
-
 }
 
 

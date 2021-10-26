@@ -22,10 +22,6 @@ const itemSchema = new mongoose.Schema({
         required: true,
         default: 1
     },
-    category: {
-        type: String,
-        required: true
-    },
     createdBy: {
         type: String,
         required: true,
@@ -48,6 +44,11 @@ const itemSchema = new mongoose.Schema({
     lastEditDate: {
         type: Date,
         required: true,
+        default: Date.now
+    },
+    purchaseDate: {
+        type: Date,
+        required: false,
         default: Date.now
     }
 })

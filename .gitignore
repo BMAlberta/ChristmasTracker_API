@@ -1,2 +1,8 @@
 logs/app.log
 node_modules
+data
+data_old
+.env
+.DS_Store
+logs/*
+package-lock.json

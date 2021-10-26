@@ -15,7 +15,7 @@ const verifyToken = (req, res, next) => {
             logger.info("%o", new LogMessage("Validate Token", "verifyToken", "Token validated.", { "tokenInfo": token }) )
             next();
         } catch (err) {
-            logger.info("%o", new LogMessage("Validate Token", "verifyToken", "Token validation failed.", { "tokenInfo": token }))
+            logger.info("%o", new LogMessage("Validate Token", "verifyToken", "Token validation failed.", { "tokenInfo": token, "error": err.message }))
             res.status(401).json({ error: "Unauthorized" });
         }
     }
@@ -27,7 +27,6 @@ const verifyToken = (req, res, next) => {
 
 
 function getUser(req, res, next) {
-
     const token = req.header("auth-token");
     var decoded = jwt.decode(token, { complete: true });
     const user = decoded.payload.id
@@ -36,7 +35,6 @@ function getUser(req, res, next) {
         res.id = user
         next()
     } else {
-
         logger.info("%o", new LogMessage("Validate Token", "getUser", "Unable to locate user.", { "userInfo": user } ))
         return res.status(500).json({ message: "Unable to find a user" })
     }

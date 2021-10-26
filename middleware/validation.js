@@ -16,10 +16,22 @@ const loginValidation = (data) => {
       email: Joi.string().min(12).max(255).required(),
       password: Joi.string().min(6).max(1024).required(),
     });
-  
+
     return schema.validate(data);
   };
+
+  const passwordValidation = (data) => {
+    console.log(data)
+    const schema = Joi.object({
+      oldPassword: Joi.string(),
+      newPassword: Joi.string().min(6).max(1024).required(),
+    });
+
+    return schema.validate(data)
+  };
+
 module.exports = {
     registerValidation,
-    loginValidation
+    loginValidation,
+    passwordValidation
 };
