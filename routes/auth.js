@@ -89,7 +89,6 @@ router.post("/login", async (req, res) => {
         name: user.email,
         id: user._id
     }, process.env.TOKEN_SECRET, { expiresIn: process.env.EXPIRY_TIME })
-    console.log(process.env.EXPIRY_TIME)
 
 
     var logInfo = new LogMessage("Auth", "login", "Login successful.", { "name": user.email, "id": user._id, "token": token })

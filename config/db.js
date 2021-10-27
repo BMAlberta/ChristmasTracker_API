@@ -13,7 +13,6 @@ const connectionOptions = {
 }
 
 
-console.log(process.env.MONGO_INITDB_ROOT_USERNAME)
 mongoose.connect(process.env.DATABASE_URL, connectionOptions)
 const db = mongoose.connection
 db.on('error', (error) => logger.warn("%o", new LogMessage("DB", "Connect", "DBAuthentication failed.\n ")))

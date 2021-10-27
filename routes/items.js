@@ -42,7 +42,7 @@ router.get('/groupedByUser', util.getUser, async (_, res) => {
   }, {
     '$match': {
       'createdBy': {
-        '$ne': '60d691edaeac5d4ca05550cc'
+        '$ne': res.id
       }
     }
   }, {
