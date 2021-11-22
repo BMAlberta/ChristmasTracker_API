@@ -114,6 +114,7 @@ router.get('/user/:id', util.getUser, async (req, res) => {
     try {
         const query = Item.find({ 'createdBy': { $eq: req.params.id } })
         items = await query.select().lean()
+        console.log(res.id)
         canRetractPurchase(items, res.id)
         logger.info("%o", new LogMessage("Items", "Get items created by user.", "Successfully retrieved items.", {"userInfo": req.params.id }))
         res.json(new DataResponse({ items }));

@@ -14,6 +14,7 @@ const usersRouter = require('./routes/users')
 const itemsRouter = require('./routes/items')
 const purchasedRouter = require('./routes/purchases')
 const authRouter = require('./routes/auth')
+const statRouter = require('./routes/stats')
 
 
 app.use(cors());
@@ -32,6 +33,7 @@ app.use(morgan(format, { stream: networkLogger.stream }));
 app.use('/' + process.env.BASE_API_BATH + '/users', jwtValidation.verifyToken, usersRouter)
 app.use('/' + process.env.BASE_API_BATH + '/items', jwtValidation.verifyToken, itemsRouter)
 app.use('/' + process.env.BASE_API_BATH + '/purchases', jwtValidation.verifyToken, purchasedRouter)
+app.use('/' + process.env.BASE_API_BATH + '/stats', jwtValidation.verifyToken, statRouter)
 app.use('/' + process.env.BASE_API_BATH + '/auth', authRouter)
 
 

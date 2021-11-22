@@ -11,8 +11,8 @@ ARG EXPIRY_TIME
 ENV AUTH_TYPE=$AUTH_TYPE
 ENV TOKEN_SECRET=$TOKEN_SECRET
 ENV EXPIRY_TIME=$EXPIRY_TIME
-COPY package.json /usr/src/app/
+COPY ./src/package.json /usr/src/app/
 RUN npm install
-COPY . /usr/src/app
+COPY ./src /usr/src/app
 EXPOSE 3000
 CMD [ "node", "server.js" ]

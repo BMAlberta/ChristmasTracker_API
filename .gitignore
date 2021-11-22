@@ -6,3 +6,6 @@ data_old
 .DS_Store
 logs/*
 package-lock.json
+logs/app.log
+package-lock.json
+package-lock.json

@@ -8,6 +8,10 @@ const { logger, LogMessage } = require('../config/winston');
 // Mark item as purchased
 router.post('/', util.getUser, async (req, res) => {
     try {
+      const item = await Item.findById(req.body.itemId)
+        if (item.purchased == true) {
+          throw new Error("Item already marked purchased.")
+        }
         const updatedItem = await Item.findByIdAndUpdate({ _id: req.body.itemId }, { purchased: "true", purchaseDate: Date.now(), purchasedBy: res.id }, { new: true })
         logger.info("%o", new LogMessage("Purchases", "Mark purchased.", "Successfully marked item as purchased.", { "itemInfo": updatedItem }))
         res.json(new DataResponse({updatedItem}));
