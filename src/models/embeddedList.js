@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
-const itemSchema = new mongoose.Schema({
+
+const embeddedItemSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -48,9 +49,44 @@ const itemSchema = new mongoose.Schema({
     },
     purchaseDate: {
         type: Date,
-        required: false,
-        default: Date.now
+        required: false
     }
 })
 
-module.exports = mongoose.model('Item', itemSchema)
+const embeddedListSchema = new mongoose.Schema({
+
+    name: {
+        type: String,
+        required: true,
+        default: ""
+    },
+    owner: {
+        type: String,
+        required: true,
+        default: ""
+    },
+    members: {
+        type: Array,
+        required: false,
+        default: []
+    },
+    creationDate: {
+        type: Date,
+        required: true,
+        default: Date.now
+    },
+    lastUpdateDate: {
+        type: Date,
+        required: true,
+        default: Date.now
+    },
+    items: {
+        type: [embeddedItemSchema],
+        required: false,
+        default: []
+    }
+})
+const EmbeddedListModel = mongoose.model('EmbeddedList', embeddedListSchema)
+const EmbeddedItemModel = mongoose.model('EmbeddedItem', embeddedItemSchema)
+
+module.exports = { EmbeddedListModel, EmbeddedItemModel }
