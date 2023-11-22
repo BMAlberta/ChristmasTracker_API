@@ -42,7 +42,7 @@ router.post("/create", util.getUser, async (req, res) => {
     }
 })
 
-router.patch('/:id', util.getUser, async (req, res) => {
+router.patch('/:id', util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {
         let result = await CoreImpl.updateList(req.params.id, res.userId, req.body)
         res.json(new DataResponse({result}));

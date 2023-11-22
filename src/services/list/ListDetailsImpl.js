@@ -143,6 +143,7 @@ async function getOverviewsForList(userId) {
                     '_id': 1,
                     'listName': '$listInfo.name',
                     'lastUpdateDate': '$listInfo.lastUpdateDate',
+                    'listStatus': '$listInfo.status',
                     'ownerInfo.rawId': '$listInfo.owner',
                     'ownerInfo.firstName': '$listInfo.ownerDetails.firstName',
                     'ownerInfo.lastName': '$listInfo.ownerDetails.lastName',
@@ -160,7 +161,7 @@ async function getOverviewsForList(userId) {
                 }
             }
         ])
-        logger.info("%o", new LogMessage("StatsImpl", "getOverviewsForList", "Successfully fetched overviews.", {"userInfo": userId}))
+        logger.info("%o", new LogMessage("ListDetailImpl", "getOverviewsForList", "Successfully fetched overviews.", {"userInfo": userId}))
         return fetchResult
     } catch (err) {
         logger.info("%o", new LogMessage("ListDetailImpl", "getOverviewsForList", "Unable to get overviews.", {"error": err}))

@@ -42,6 +42,7 @@ async function getOwnedLists(userId) {
             'name': 1,
             'creationDate': 1,
             'lastUpdateDate': 1,
+            'status': 1,
             'members': 1
         })
         logger.info("%o", new LogMessage("ListCoreImpl", "getOwnedLists", "Successfully retrieved list details.", {"userInfo": userId}))
@@ -121,6 +122,29 @@ async function deleteList(listId, userId) {
     }
 }
 
+async function validateListStatus(req, res, next) {
+    try {
+        const fetchResult = await EmbeddedListModel.findById(req.body.listId, {"status": 1})
+        if (fetchResult.status === "active") {
+            logger.info("%o", new LogMessage("Validate List Status", "validateListStatus", "List active.", {
+                "listInfo": req.body.listId
+            }))
+            next()
+        } else {
+            logger.info("%o", new LogMessage("Validate List Status", "validateListStatus", "List inactive.", {
+                "listInfo": req.body.listId
+            }))
+            return res.status(500).json({
+                message: "List not active"
+            })
+        }
+    } catch (err) {
+        return res.status(500).json({
+            message: "List not active"
+        })
+    }
+}
+
 function newListValidation(data) {
     const schema = Joi.object({
         listName: Joi.string().required()
@@ -135,4 +159,5 @@ function updateListValidation(data) {
     return schema.validate(data);
 }
 
-module.exports = {createList, updateList, deleteList, getListDetails, getOwnedLists}
+
+module.exports = {createList, updateList, deleteList, getListDetails, getOwnedLists, validateListStatus}
