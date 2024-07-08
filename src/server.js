@@ -1,4 +1,4 @@
-require('dotenv').config({ path: `.env.${process.env.NODE_ENV}` });
+require('dotenv').config()
 require("./config/db")
 
 const express = require('express')
@@ -83,6 +83,6 @@ app.use(function (err, req, res, _) {
 
 app.listen(3000)
 var logInfo = new LogMessage("Server", "Startup", "Application is running.", {
-    "port": process.env.API_PORT,
+    "port": process.env.API_PORT
 })
 logger.info("%o", logInfo)

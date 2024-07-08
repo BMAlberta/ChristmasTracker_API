@@ -5,8 +5,12 @@ const {
 	LogMessage
 } = require('../config/winston');
 
+
+const connectionString = process.env.DATABASE_URI_SCHEME + process.env.MONGO_INITDB_ROOT_USERNAME + ":" + process.env.MONGO_INITDB_ROOT_PASSWORD + "@" + process.env.DATABASE_URI_HOST
+
 var store = new MongoDBStore({
-	uri: generateConnectionString(),
+	// uri: connectionString,
+	uri: process.env.DATABASE_URL,
 	databaseName: process.env.DATABASE_ACTIVE_DB,
 	collection: 'sessions'
 });
@@ -30,17 +34,17 @@ function generateConnectionString() {
 }
 
 function validateAuth(request, response, next) {
-	// if (!request.session?.details?.userAuthenticated) {
-	// 	logger.info("%o", new LogMessage("SessionManager", "validateAuth", "Session authentication not valid."))
-	// 	return response.status(401).json({
-	// 		error: "Missing authentication"
-	// 	});
-	// } else {
-	// 	logger.info("%o", new LogMessage("SessionManager", "validateAuth", "Session validated.", {
-	// 		"sessionInfo": request.session.details
-	// 	}))
+	if (!request.session?.details?.userAuthenticated) {
+		logger.info("%o", new LogMessage("SessionManager", "validateAuth", "Session authentication not valid."))
+		return response.status(401).json({
+			error: "Missing authentication"
+		});
+	} else {
+		logger.info("%o", new LogMessage("SessionManager", "validateAuth", "Session validated.", {
+			"sessionInfo": request.session.details
+		}))
 		next();
-	// }
+	}
 };
 
 function enrollmentActive(request, response, next) {
@@ -58,23 +62,21 @@ function enrollmentActive(request, response, next) {
 };
 
 function getUser(req, res, next) {
-	res.userId = ""
-	// const user = req.session.details.userId
-	// if (user != null) {
-	// 	res.userId = user.toString()
-	// 	logger.info("%o", new LogMessage("Validate Token", "getUser", "Found user.", {
-	// 		"userInfo": user
-	// 	}))
-	// 	next()
-	// } else {
-	// 	logger.info("%o", new LogMessage("Validate Token", "getUser", "Unable to locate user.", {
-	// 		"userInfo": user
-	// 	}))
-	// 	return res.status(500).json({
-	// 		message: "Unable to find a user"
-	// 	})
-	// }
-	next()
+	const user = req.session.details.userId
+	if (user != null) {
+		res.userId = user.toString()
+		logger.info("%o", new LogMessage("Validate Token", "getUser", "Found user.", {
+			"userInfo": user
+		}))
+		next()
+	} else {
+		logger.info("%o", new LogMessage("Validate Token", "getUser", "Unable to locate user.", {
+			"userInfo": user
+		}))
+		return res.status(500).json({
+			message: "Unable to find a user"
+		})
+	}
 };
 
 module.exports = {
