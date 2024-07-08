@@ -50,18 +50,25 @@ async function getOverviewsForList(userId) {
     try {
 
         let fetchResult = await EmbeddedListModel.aggregate([
+            // {
+            //     '$match': {
+            //         'members': {
+            //             '$in': [
+            //                 userId
+            //             ]
+            //         }
+            //     }
+            // },
             {
                 '$match': {
-                    'members': {
-                        '$in': [
-                            userId
-                        ]
+                    'owner': {
+                        '$ne': userId
                     }
                 }
             }, {
                 '$match': {
-                    'owner': {
-                        '$ne': userId
+                    'status': {
+                        '$eq': 'active'
                     }
                 }
             }, {
