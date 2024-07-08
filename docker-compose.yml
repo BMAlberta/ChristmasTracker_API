@@ -5,13 +5,13 @@ services:
     restart: always
     image: "balberta/christmas-tracker-api:v1.9"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: "localmgr"
-      MONGO_INITDB_ROOT_PASSWORD: "vt6eqqk12Eowld7H"
-      SESSION_SECRET: "qtUqtnx!7-etq@Rs97FFFWy2vLJYebLQ@i-rQv!9g_zWdeh_wr_BVP7XXVRPa7iD"
-      OTP_ENCRYPTION_SECRET: "WmZq4t7w9z$C&F)J@NcRfUjXn2r5u8x/"
-      BASIC_ENROLLMENT_ACCESS_KEY: "H3P7B6Z8"
-      DATABASE_URL: "mongodb+srv://democluster.493km.mongodb.net/"
+      MONGO_INITDB_ROOT_USERNAME: 
+      MONGO_INITDB_ROOT_PASSWORD: 
+      SESSION_SECRET: 
+      OTP_ENCRYPTION_SECRET: 
+      BASIC_ENROLLMENT_ACCESS_KEY: 
+      DATABASE_URL: 
       DATABASE_URI_SCHEME: "mongodb+srv://"
-      DATABASE_URI_HOST: "democluster.493km.mongodb.net/"
+      DATABASE_URI_HOST: 
     ports:
       - "3000:3000"
