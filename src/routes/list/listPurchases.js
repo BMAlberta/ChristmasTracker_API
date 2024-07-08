@@ -4,8 +4,9 @@ const router = express.Router()
 const {DataResponse, ErrorResponse} = require("../../models/payload")
 const util = require('../../middleware/session')
 const PurchaseImpl = require('../../services/list/ListPurchasesImpl')
+const CoreImpl = require('../../services/list/ListCoreImpl')
 
-router.post("/", util.getUser, async (req, res) => {
+router.post("/", util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {
         const detail = await PurchaseImpl.purchaseItem(res.userId, req.body)
         res.json(new DataResponse({detail}))
@@ -14,7 +15,7 @@ router.post("/", util.getUser, async (req, res) => {
     }
 })
 
-router.post("/retract", util.getUser, async (req, res) => {
+router.post("/retract", util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {
         const detail = await PurchaseImpl.retractItemPurchase(res.userId, req.body)
         res.json(new DataResponse({detail}))
