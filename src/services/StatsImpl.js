@@ -6,74 +6,83 @@ async function getPurchaseOverviews(userId) {
 
         let fetchResult = await EmbeddedListModel.aggregate([
             {
-              '$match': {
-                '$and': [
-                  {
-                    'members': {
-                      '$in': [
-                        userId
-                      ]
+                '$match': {
+                    '$and': [
+                        {
+                            'members': {
+                                '$in': [
+                                    userId
+                                ]
+                            }
+                        }, {
+                            'owner': {
+                                '$ne': userId
+                            }
+                        }
+                    ]
+                }
+            }, {
+                '$unwind': {
+                    'path': '$items'
+                }
+            }, {
+                '$addFields': {
+                    'purchaseYear': {
+                        '$toString': {
+                            '$year': '$items.purchaseDate'
+                        }
                     }
-                  }, {
-                    'owner': {
-                      '$ne': userId
+                }
+            }, {
+                '$match': {
+                    'items.purchasedBy': {
+                        '$eq': userId
                     }
-                  }
-                ]
-              }
-            }, {
-              '$unwind': {
-                'path': '$items'
-              }
-            }, {
-              '$match': {
-                'items.purchasedBy': {
-                  '$eq': userId
                 }
-              }
             }, {
-              '$addFields': {
-                'convertedOwnerId': {
-                  '$toObjectId': '$owner'
+                '$addFields': {
+                    'convertedOwnerId': {
+                        '$toObjectId': '$owner'
+                    }
                 }
-              }
             }, {
-              '$lookup': {
-                'from': 'users', 
-                'localField': 'convertedOwnerId', 
-                'foreignField': '_id', 
-                'as': 'ownerDetails'
-              }
-            }, {
-              '$group': {
-                '_id': '$_id', 
-                'totalSpent': {
-                  '$sum': '$items.price'
-                }, 
-                'purchasedItems': {
-                  '$sum': 1
-                }, 
-                'listInfo': {
-                  '$first': '$$ROOT'
+                '$lookup': {
+                    'from': 'users',
+                    'localField': 'convertedOwnerId',
+                    'foreignField': '_id',
+                    'as': 'ownerDetails'
                 }
-              }
             }, {
-              '$unwind': {
-                'path': '$listInfo.ownerDetails'
-              }
+                '$group': {
+                    '_id': '$_id',
+                    'totalSpent': {
+                        '$sum': '$items.price'
+                    },
+                    'purchasedItems': {
+                        '$sum': 1
+                    },
+                    'listInfo': {
+                        '$first': '$$ROOT'
+                    }
+                }
             }, {
-              '$project': {
-                'totalSpent': 1, 
-                'purchasedItems': 1, 
-                '_id': 0, 
-                'listId': '$_id', 
-                'listName': '$listInfo.name', 
-                'ownerInfo.rawId': '$listInfo.owner', 
-                'ownerInfo.firstName': '$listInfo.ownerDetails.firstName', 
-                'ownerInfo.lastName': '$listInfo.ownerDetails.lastName'
-              }
+                '$unwind': {
+                    'path': '$listInfo.ownerDetails'
+                }
+            }, {
+                '$project': {
+                    'totalSpent': 1,
+                    'purchasedItems': 1,
+                    '_id': 0,
+                    'listId': '$_id',
+                    'listName': '$listInfo.name',
+                    'purchaseYear': '$listInfo.purchaseYear',
+                    'ownerInfo.rawId': '$listInfo.owner',
+                    'ownerInfo.firstName': '$listInfo.ownerDetails.firstName',
+                    'ownerInfo.lastName': '$listInfo.ownerDetails.lastName'
+                }
             }
-          ])
+        ])
 
         logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Successfully calculated spending overviews.", {"userInfo": userId}))
         return fetchResult

@@ -80,10 +80,16 @@ const embeddedListSchema = new mongoose.Schema({
         required: true,
         default: Date.now
     },
+
     items: {
         type: [embeddedItemSchema],
         required: false,
         default: []
+    },
+    status: {
+        type: String,
+        required: true,
+        default: "active"
     }
 })
 const EmbeddedListModel = mongoose.model('EmbeddedList', embeddedListSchema)
