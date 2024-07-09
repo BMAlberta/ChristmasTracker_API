@@ -1,0 +1,26 @@
+import express from 'express';
+const router = express.Router()
+
+import { DataResponse, ErrorResponse } from '../../models/payload.mjs';
+import util from '../../middleware/session.mjs';
+import MembersImpl from '../../services/list/ListMembersImpl.mjs';
+
+router.post('/delete', util.getUser, async (req, res) => {
+    try {
+        let result = await MembersImpl.removeUserFromList(res.userId, req.body)
+        res.json(new DataResponse(result));
+    } catch (err) {
+        res.status(500).json(new ErrorResponse(err.message));
+    }
+})
+
+router.post('/unsubscribe', util.getUser, async (req, res) => {
+    try {
+        let result = await MembersImpl.removeSelfFromList(res.userId, req.body)
+        res.json(new DataResponse({ result }));
+    } catch (err) {
+        res.status(500).json(new ErrorResponse(err.message));
+    }
+})
+
+export default router;
