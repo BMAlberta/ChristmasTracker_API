@@ -1,8 +1,8 @@
-const express = require('express')
+import express from 'express';
 const router = express.Router()
-const {DataResponse, ErrorResponse} = require("../models/payload")
-const UserProfileServiceImpl = require('../services/UserProfileImpl')
-const util = require("../middleware/session");
+import { DataResponse, ErrorResponse } from '../models/payload.mjs';
+import UserProfileServiceImpl from '../services/UserProfileImpl.mjs';
+import util from '../middleware/session.mjs';
 
 
 router.get("/:id", async (req, res) => {
@@ -24,8 +24,8 @@ router.patch("/", util.getUser, async (req, res) => {
     }
 })
 
-
 router.delete("/:id", util.getUser, async (req, res) => {
     res.status(500).json(new ErrorResponse("Currently not supported."));
 })
-module.exports = router
+
+export default router;

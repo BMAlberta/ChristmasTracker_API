@@ -1,10 +1,10 @@
-const express = require('express')
+import express from 'express';
 const router = express.Router()
 
-const {DataResponse, ErrorResponse} = require("../../models/payload")
-const util = require('../../middleware/session')
-const DetailImpl = require('../../services/list/ListDetailsImpl')
-const CoreImpl = require('../../services/list/ListCoreImpl')
+import { DataResponse, ErrorResponse } from '../../models/payload.mjs';
+import util from '../../middleware/session.mjs';
+import DetailImpl from '../../services/list/ListDetailsImpl.mjs';
+import CoreImpl from '../../services/list/ListCoreImpl.mjs';
 
 router.get("/overviews", util.getUser, async (req, res) => {
     try {
@@ -42,4 +42,4 @@ router.delete('/:id', util.getUser, async (req, res) => {
     }
 })
 
-module.exports = router
+export default router;

@@ -1,6 +1,6 @@
-var appRoot = require('app-root-path');
-var winston = require('winston');
-const DailyRotateFile = require('winston-daily-rotate-file');
+import appRoot from 'app-root-path';
+import winston from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
 const { combine, timestamp, printf, splat } = winston.format;
 
 
@@ -40,7 +40,7 @@ const dailyLogRoller = new (winston.transports.DailyRotateFile)({
 });
 
 // instantiate a new Winston Logger with the settings defined above
-var logger = winston.createLogger({
+export var logger = winston.createLogger({
     format: combine(
         timestamp(),
         splat(),
@@ -54,7 +54,7 @@ var logger = winston.createLogger({
   exitOnError: false, // do not exit on handled exceptions
 });
 
-var networkLogger = winston.createLogger({
+export var networkLogger = winston.createLogger({
   transports: [
     new winston.transports.File(options.file),
     new winston.transports.Console(options.console)
@@ -70,7 +70,7 @@ networkLogger.stream = {
   },
 };
 
-function LogMessage(process, event, message, details) {
+export function LogMessage(process, event, message, details) {
   this.process = process
   this.event = event
   this.message = message
@@ -81,4 +81,3 @@ function LogMessage(process, event, message, details) {
   }
 }
 
-module.exports = { logger, networkLogger, LogMessage }

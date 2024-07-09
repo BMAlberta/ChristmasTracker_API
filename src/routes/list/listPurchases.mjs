@@ -1,10 +1,10 @@
-const express = require('express')
+import express from 'express';
 const router = express.Router()
 
-const {DataResponse, ErrorResponse} = require("../../models/payload")
-const util = require('../../middleware/session')
-const PurchaseImpl = require('../../services/list/ListPurchasesImpl')
-const CoreImpl = require('../../services/list/ListCoreImpl')
+import { DataResponse, ErrorResponse } from '../../models/payload.mjs';
+import util from '../../middleware/session.mjs';
+import PurchaseImpl from '../../services/list/ListPurchasesImpl.mjs';
+import CoreImpl from '../../services/list/ListCoreImpl.mjs';
 
 router.post("/", util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {
@@ -24,4 +24,4 @@ router.post("/retract", util.getUser, CoreImpl.validateListStatus, async (req, r
     }
 })
 
-module.exports = router
+export default router;

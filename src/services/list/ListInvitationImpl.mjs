@@ -1,8 +1,8 @@
-const {logger, LogMessage} = require('../../config/winston')
-const {EmbeddedListModel} = require('../../models/embeddedList')
-const Invite = require('../../models/invitation')
-const OTPGenerator = require('otp-generator')
-const Joi = require("@hapi/joi");
+import { logger, LogMessage } from '../../config/winston.mjs';
+import { EmbeddedListModel } from '../../models/embeddedList.mjs';
+import Invite from '../../models/invitation.mjs';
+import OTPGenerator from 'otp-generator';
+import Joi from '@hapi/joi';
 
 async function createInvitationToList(requesterId, reqBody) {
     let input = inviteValidation(reqBody)
@@ -153,6 +153,6 @@ function inviteAcceptValidation(data) {
 }
 
 
-module.exports = {
+export default {
     createInvitationToList, revokeInvitationToList, acceptInvitationToList
-}
+};

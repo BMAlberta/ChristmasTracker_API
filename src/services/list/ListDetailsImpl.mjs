@@ -1,6 +1,6 @@
-const {logger, LogMessage} = require('../../config/winston')
-const {EmbeddedListModel, EmbeddedItemModel} = require('../../models/embeddedList')
-const Joi = require("@hapi/joi");
+import { logger, LogMessage } from '../../config/winston.mjs';
+import { EmbeddedListModel, EmbeddedItemModel } from '../../models/embeddedList.mjs';
+import Joi from '@hapi/joi';
 
 
 async function addItemToList(userId, reqBody) {
@@ -281,4 +281,4 @@ function updateItemValidation(data) {
 }
 
 
-module.exports = {addItemToList, getOverviewsForList, updateItem, deleteItemFromList}
+export default {addItemToList, getOverviewsForList, updateItem, deleteItemFromList};

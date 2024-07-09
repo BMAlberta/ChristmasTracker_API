@@ -1,7 +1,7 @@
-const UserModel = require("../models/user")
-const {logger, LogMessage} = require('../config/winston')
-const Joi = require("@hapi/joi");
-const util = require('../middleware/session')
+import UserModel from '../models/user.mjs';
+import { logger, LogMessage } from '../config/winston.mjs';
+import Joi from '@hapi/joi';
+import util from '../middleware/session.mjs';
 
 async function getUserOverview(userId) {
     try {
@@ -74,4 +74,4 @@ function updateUserValidation(data) {
     return schema.validate(data)
 }
 
-module.exports = {getUserOverview, updateUser, deleteUser}
+export default {getUserOverview, updateUser, deleteUser};

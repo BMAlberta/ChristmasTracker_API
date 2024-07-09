@@ -1,9 +1,9 @@
-const express = require('express')
+import express from 'express';
 const router = express.Router()
 
-const {DataResponse, ErrorResponse} = require("../models/payload")
-const util = require('../middleware/session')
-const StatsImpl = require('../services/StatsImpl')
+import { DataResponse, ErrorResponse } from '../models/payload.mjs';
+import util from '../middleware/session.mjs';
+import StatsImpl from '../services/StatsImpl.mjs';
 
 
 router.get("/purchases", util.getUser, async (req, res) => {
@@ -15,4 +15,4 @@ router.get("/purchases", util.getUser, async (req, res) => {
     }
 })
 
-module.exports = router
+export default router;

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+import mongoose from 'mongoose';
 
 const embeddedItemSchema = new mongoose.Schema({
     name: {
@@ -92,7 +92,5 @@ const embeddedListSchema = new mongoose.Schema({
         default: "active"
     }
 })
-const EmbeddedListModel = mongoose.model('EmbeddedList', embeddedListSchema)
-const EmbeddedItemModel = mongoose.model('EmbeddedItem', embeddedItemSchema)
-
-module.exports = { EmbeddedListModel, EmbeddedItemModel }
+export const EmbeddedListModel = mongoose.model('EmbeddedList', embeddedListSchema)
+export const EmbeddedItemModel = mongoose.model('EmbeddedItem', embeddedItemSchema)

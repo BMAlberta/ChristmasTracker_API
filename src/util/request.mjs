@@ -1,4 +1,4 @@
-const {LogMessage, logger} = require("../config/winston");
+import { LogMessage, logger } from '../config/winston.mjs';
 
 function getCallerIP(request) {
     var ip = request.headers['x-forwarded-for'] ||
@@ -16,4 +16,4 @@ function getCallerIP(request) {
     }
 }
 
-module.exports = { getCallerIP }
+export default { getCallerIP };

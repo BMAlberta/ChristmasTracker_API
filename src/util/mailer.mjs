@@ -14,7 +14,7 @@ const nodemailer = require('nodemailer')
 
 const subject_mail = "OTP: For Reset Password"
 
-const message = (otp) =>{
+const optMessage = (otp) =>{
     return `Dear User, \n\n`
     + 'OTP for Reset Password is : \n\n'
     + `${otp}\n\n`
@@ -23,7 +23,7 @@ const message = (otp) =>{
     + 'Divyansh Agarwal\n\n'
 }
 
-    const {message, subject_mail} = require('../templates/email/email_verification');
+    const {optMessage, subject_mail} = require('../templates/email/email_verification');
         email_message=message(otp)
         email_subject=subject_mail
 

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+import mongoose from 'mongoose';
 const inviteSchema = new mongoose.Schema({
 
 	creationDate: {
@@ -25,4 +25,4 @@ const inviteSchema = new mongoose.Schema({
 		default: ""
 	}
 })
-module.exports = mongoose.model('Invitation', inviteSchema)
+export default mongoose.model('Invitation', inviteSchema);

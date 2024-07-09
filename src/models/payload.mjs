@@ -1,4 +1,4 @@
-class Response {
+export class Response {
 	constructor(error = null, payload) {
 		if (error != null) {
 			this.error = {
@@ -18,12 +18,12 @@ class Response {
 
 
 
-function DataResponse(payload) {
+export function DataResponse(payload) {
 	return new Response(null, payload)
 }
 
 
-function ErrorResponse(message) {
+export function ErrorResponse(message) {
 	return new Response(message, null)
 }
 
@@ -31,9 +31,4 @@ function NewErrorResponse(message, payload) {
 	return new Response(message, payload)
 }
 
-module.exports = {
-	Response,
-	DataResponse,
-	ErrorResponse,
-	NewErrorResponse
-}
+

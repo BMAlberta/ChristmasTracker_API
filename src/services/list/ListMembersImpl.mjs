@@ -1,6 +1,6 @@
-const {logger, LogMessage} = require('../../config/winston')
-const {EmbeddedListModel} = require('../../models/embeddedList')
-const Joi = require("@hapi/joi");
+import { logger, LogMessage } from '../../config/winston.mjs';
+import { EmbeddedListModel } from '../../models/embeddedList.mjs';
+import Joi from '@hapi/joi';
 
 async function removeUserFromList(requesterId, reqBody) {
 
@@ -96,6 +96,6 @@ function unsubscribeValidation(data) {
     return schema.validate(data)
 }
 
-module.exports = {
+export default {
     removeUserFromList, removeSelfFromList
-}
+};

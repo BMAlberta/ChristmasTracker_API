@@ -1,9 +1,9 @@
-const {EmbeddedListModel} = require('../../models/embeddedList')
-const {logger, LogMessage} = require('../../config/winston')
-const Joi = require("@hapi/joi");
+import { EmbeddedListModel } from '../../models/embeddedList.mjs';
+import { logger, LogMessage } from '../../config/winston.mjs';
+import Joi from '@hapi/joi';
 
 //Get list details including users
-async function getListDetails(listId, userId, verbose) {
+export async function getListDetails(listId, userId, verbose) {
     let projection = {}
     if (verbose === "false") {
         projection['items'] = 0
@@ -36,7 +36,7 @@ async function getListDetails(listId, userId, verbose) {
 }
 
 // Get list for owner
-async function getOwnedLists(userId) {
+export async function getOwnedLists(userId) {
     try {
         const result = await EmbeddedListModel.find({ 'owner': userId }, {
             'name': 1,
@@ -54,7 +54,7 @@ async function getOwnedLists(userId) {
 }
 
 //Create a new list
-async function createList(userId, reqBody) {
+export async function createList(userId, reqBody) {
 // Validate input
     let input = newListValidation(reqBody)
 
@@ -77,7 +77,7 @@ async function createList(userId, reqBody) {
 }
 
 //Update a list
-async function updateList(listId, userId, reqBody) {
+export async function updateList(listId, userId, reqBody) {
 
     let input = updateListValidation(reqBody)
 
@@ -103,7 +103,7 @@ async function updateList(listId, userId, reqBody) {
 }
 
 //Delete a list
-async function deleteList(listId, userId) {
+export async function deleteList(listId, userId) {
     try {
         const fetchResult = await EmbeddedListModel.findById(listId, {'owner': 1})
         if (userId !== fetchResult.owner) {
@@ -121,8 +121,7 @@ async function deleteList(listId, userId) {
         throw err
     }
 }
-
-async function validateListStatus(req, res, next) {
+export async function validateListStatus(req, res, next) {
     try {
         const fetchResult = await EmbeddedListModel.findById(req.body.listId, {"status": 1})
         if (fetchResult.status === "active") {
@@ -160,4 +159,4 @@ function updateListValidation(data) {
 }
 
 
-module.exports = {createList, updateList, deleteList, getListDetails, getOwnedLists, validateListStatus}
+export default {createList, updateList, deleteList, getListDetails, getOwnedLists, validateListStatus};

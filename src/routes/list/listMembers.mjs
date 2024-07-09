@@ -1,9 +1,9 @@
-const express = require('express')
+import express from 'express';
 const router = express.Router()
 
-const { DataResponse, ErrorResponse } = require("../../models/payload")
-const util = require('../../middleware/session')
-const MembersImpl = require('../../services/list/ListMembersImpl')
+import { DataResponse, ErrorResponse } from '../../models/payload.mjs';
+import util from '../../middleware/session.mjs';
+import MembersImpl from '../../services/list/ListMembersImpl.mjs';
 
 router.post('/delete', util.getUser, async (req, res) => {
     try {
@@ -23,4 +23,4 @@ router.post('/unsubscribe', util.getUser, async (req, res) => {
     }
 })
 
-module.exports = router
+export default router;

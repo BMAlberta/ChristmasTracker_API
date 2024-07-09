@@ -1,10 +1,9 @@
-const express = require('express')
+import express from 'express';
 const router = express.Router()
-const NetworkUtils = require('../util/request')
-const {DataResponse, ErrorResponse} = require("../models/payload")
-const AuthServiceImpl = require('../services/AuthServiceImpl')
-const util = require("../middleware/session");
-
+import NetworkUtils from '../util/request.mjs';
+import { DataResponse, ErrorResponse } from '../models/payload.mjs';
+import AuthServiceImpl from '../services/AuthServiceImpl.mjs';
+import util from '../middleware/session.mjs';
 
 router.post("/login", async (req, res) => {
     try {
@@ -18,13 +17,12 @@ router.post("/login", async (req, res) => {
 
 router.post("/logout", async (req, res) => {
     try {
-        const result = await AuthServiceImpl.doLogout(req.session)
+        await AuthServiceImpl.doLogout(req.session)
         res.json(new DataResponse({"status": "success"}))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }
 })
-
 
 router.post("/password/update", util.getUser, async (req, res) => {
     try {
@@ -34,4 +32,4 @@ router.post("/password/update", util.getUser, async (req, res) => {
         res.status(500).json(new ErrorResponse(err.message));
     }
 })
-module.exports = router
+export default router;

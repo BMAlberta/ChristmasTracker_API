@@ -1,5 +1,5 @@
-const {logger, LogMessage} = require('../config/winston')
-const {EmbeddedListModel} = require('../models/embeddedList')
+import { logger, LogMessage } from '../config/winston.mjs';
+import { EmbeddedListModel } from '../models/embeddedList.mjs';
 
 async function getPurchaseOverviews(userId) {
     try {
@@ -93,4 +93,4 @@ async function getPurchaseOverviews(userId) {
 }
 
 
-module.exports = {getPurchaseOverviews}
+export default {getPurchaseOverviews};

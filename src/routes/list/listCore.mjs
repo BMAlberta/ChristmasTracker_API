@@ -1,9 +1,9 @@
-const express = require('express')
+import express from 'express';
 const router = express.Router()
 
-const {DataResponse, ErrorResponse} = require("../../models/payload")
-const util = require('../../middleware/session')
-const CoreImpl = require('../../services/list/ListCoreImpl')
+import { DataResponse, ErrorResponse } from '../../models/payload.mjs';
+import util from '../../middleware/session.mjs';
+import CoreImpl from '../../services/list/ListCoreImpl.mjs';
 
 
 router.get("/owned/", util.getUser, async (req, res) => {
@@ -60,4 +60,4 @@ router.delete('/:id', util.getUser, async (req, res) => {
     }
 })
 
-module.exports = router
+export default router;

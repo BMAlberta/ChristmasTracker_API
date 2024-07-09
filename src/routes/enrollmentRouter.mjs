@@ -1,10 +1,8 @@
-const express = require('express')
+import express from 'express';
 const router = express.Router()
 
-const {DataResponse, ErrorResponse, NewErrorResponse} = require("../models/payload")
-const util = require('../middleware/session')
-const EnrollmentImpl = require('../services/EnrollmentServiceImpl')
-
+import { DataResponse, ErrorResponse } from '../models/payload.mjs';
+import EnrollmentImpl from '../services/EnrollmentServiceImpl.mjs';
 
 router.post("/checkUser", async (req, res) => {
     try {
@@ -43,6 +41,4 @@ router.post("/lw/createUser", async (req, res) => {
     }
 })
 
-
-
-module.exports = router
+export default router;

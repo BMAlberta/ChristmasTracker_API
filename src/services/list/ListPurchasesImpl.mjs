@@ -1,6 +1,6 @@
-const {EmbeddedListModel} = require('../../models/embeddedList')
-const {logger, LogMessage} = require('../../config/winston')
-const Joi = require("@hapi/joi");
+import { EmbeddedListModel } from '../../models/embeddedList.mjs';
+import { logger, LogMessage } from '../../config/winston.mjs';
+import Joi from '@hapi/joi';
 
 async function purchaseItem(userId, reqBody) {
     let input = purchaseDataValidation(reqBody)
@@ -101,4 +101,4 @@ function purchaseDataValidation(data) {
 }
 
 
-module.exports = {purchaseItem, retractItemPurchase}
+export default {purchaseItem, retractItemPurchase};

@@ -1,9 +1,9 @@
-const express = require('express')
+import express from 'express';
 const router = express.Router()
 
-const {DataResponse, ErrorResponse} = require("../../models/payload")
-const util = require('../../middleware/session')
-const InviteImpl = require('../../services/list/ListInvitationImpl')
+import { DataResponse, ErrorResponse } from '../../models/payload.mjs';
+import util from '../../middleware/session.mjs';
+import InviteImpl from '../../services/list/ListInvitationImpl.mjs';
 
 
 router.post("/send", util.getUser, async (req, res) => {
@@ -33,4 +33,4 @@ router.post('/accept', util.getUser, async (req, res) => {
     }
 })
 
-module.exports = router
+export default router;

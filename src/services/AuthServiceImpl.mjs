@@ -1,8 +1,8 @@
-const bcrypt = require("bcryptjs")
-const UserModel = require("../models/user")
-const {logger, LogMessage} = require('../config/winston')
-const Joi = require("@hapi/joi");
-const { ValidationError } = require('../config/errors')
+import bcrypt from 'bcryptjs';
+import UserModel from '../models/user.mjs';
+import { logger, LogMessage } from '../config/winston.mjs';
+import Joi from '@hapi/joi';
+import { ValidationError } from '../config/errors.mjs';
 
 async function doLogin(session, reqBody, requestMetaData) {
     let input = loginValidation(reqBody)
@@ -117,4 +117,4 @@ function changePasswordValidation(data) {
     return schema.validate(data);
 }
 
-module.exports = { doLogin, doLogout, updatePassword }
+export default { doLogin, doLogout, updatePassword };

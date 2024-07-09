@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 const algorithm = 'aes-256-ctr';
 const ENCRYPTION_KEY = process.env.OTP_ENCRYPTION_SECRET;
 const IV_LENGTH = 16;
@@ -29,7 +29,7 @@ function getKey() {
 	return key
 }
 
-module.exports = {
+export default {
 	encrypt,
 	decrypt
-}
+};

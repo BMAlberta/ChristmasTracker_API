@@ -1,10 +1,10 @@
-const bcrypt = require("bcryptjs")
-const security = require('../config/crypto')
-const otpGenerator = require('otp-generator')
-const OTPModel = require("../models/otp")
-const UserModel = require("../models/user")
-const {logger, LogMessage} = require('../config/winston')
-const Joi = require("@hapi/joi");
+import bcrypt from 'bcryptjs';
+import security from '../config/crypto.mjs';
+import otpGenerator from 'otp-generator';
+import OTPModel from '../models/otp.mjs';
+import UserModel from '../models/user.mjs';
+import { logger, LogMessage } from '../config/winston.mjs';
+import Joi from '@hapi/joi';
 
 
 // Error Code Root: 100
@@ -347,4 +347,4 @@ function newUserWithAccessKeyValidation(data) {
 }
 
 
-module.exports = {enrollUser, validateEmail, resendEmailValidation, createPassword, enrollUserWithAccessCode}
+export default {enrollUser, validateEmail, resendEmailValidation, createPassword, enrollUserWithAccessCode};
