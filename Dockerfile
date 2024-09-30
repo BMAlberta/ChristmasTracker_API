@@ -21,4 +21,4 @@ COPY ./package.json /usr/src/app/
 RUN npm install
 COPY ./src /usr/src/app
 EXPOSE 3000
-CMD [ "node", "server.js" ]
+CMD [ "node", "index.mjs" ]
