@@ -1,15 +1,19 @@
 import sessionManager from 'express-session';
-import MongoDBStoreFactory from 'connect-mongodb-session';
-import { createConnection } from '../config/db.mjs';
+import MongoStore from 'connect-mongo'
+import { getDbConnection } from '../config/db.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
 
-export function createSessionStore() {
+export async function createSessionStore() {
 
-	const MongoDBStore = MongoDBStoreFactory(sessionManager);
-	var store = new MongoDBStore({
-		clientPromise: createConnection()
-	});
+	try {
+		var dbConnection = await getDbConnection()
+	} catch (err) {
+		throw Error("Unable to get a connection")
+	}
 	
+	var client = dbConnection.getClient()
+	var store = MongoStore.create(
+		{client: client});
 	
 	var sessionStore = sessionManager({
 		secret: process.env.SESSION_SECRET,

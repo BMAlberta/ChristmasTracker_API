@@ -12,7 +12,13 @@ async function doLogin(session, reqBody, requestMetaData) {
     }
 
     // Find user by email
-     let user = await UserModel.findOne({ email: reqBody.email })
+    var user = ""
+    try {
+        user = await UserModel.findOne({ email: reqBody.email })
+    } catch (err) {
+        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to query for users", { "user": reqBody.email, "ip": loginIp }))
+        throw Error("Query failed.")
+    }
 
     if (!user) {
         logger.info("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to find user.", { "userId": reqBody.email }))

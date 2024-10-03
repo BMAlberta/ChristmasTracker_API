@@ -9,3 +9,7 @@ package-lock.json
 logs/app.log
 package-lock.json
 package-lock.json
+docker-compose.yml
+.env*
+env.*
+config/.env.production

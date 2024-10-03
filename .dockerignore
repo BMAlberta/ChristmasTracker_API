@@ -7,3 +7,8 @@ Dockerfile
 .dockerignore
 .git
 .gitignore
+.env
+.env.production
+.env.development
+env.production
+docker-compose.yml

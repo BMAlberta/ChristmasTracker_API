@@ -5,13 +5,15 @@ services:
     restart: always
     image: "balberta/christmas-tracker-api:v1.9"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: 
-      MONGO_INITDB_ROOT_PASSWORD: 
-      SESSION_SECRET: 
-      OTP_ENCRYPTION_SECRET: 
-      BASIC_ENROLLMENT_ACCESS_KEY: 
-      DATABASE_URL: 
-      DATABASE_URI_SCHEME: "mongodb+srv://"
-      DATABASE_URI_HOST: 
+      MONGO_INITDB_ROOT_USERNAME:
+      MONGO_INITDB_ROOT_PASSWORD:
+      SESSION_SECRET:
+      OTP_ENCRYPTION_SECRET:
+      BASIC_ENROLLMENT_ACCESS_KEY:
+      DATABASE_URL:
+      DATABASE_URI_SCHEME:
+      DATABASE_URI_HOST:
+      DATABASE_CONNECTION_STRING:
+      NODE_ENV: "production"
     ports:
       - "3000:3000"

@@ -17,11 +17,11 @@ import statsRouter from './routes/statsRouter.mjs';
 
 
 
-export function startServer() {
+export async function startServer() {
     const app = express()
 
     app.use(cors());
-    var sessionStore = createSessionStore()
+    var sessionStore = await createSessionStore()
     app.use(sessionStore)
     
     app.use(express.urlencoded({extended: true})); 
