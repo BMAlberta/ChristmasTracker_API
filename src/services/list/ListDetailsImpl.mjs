@@ -1,13 +1,42 @@
 import { logger, LogMessage } from '../../config/winston.mjs';
 import { EmbeddedListModel, EmbeddedItemModel } from '../../models/embeddedList.mjs';
+import { sanitizeListAttributes, sanitizeItemAttributes } from '../../util/sanitizeItems.mjs'
 import Joi from '@hapi/joi';
 
 
-async function addItemToList(userId, reqBody) {
+
+async function addNewItemToList(userId, reqBody) {
+    try {
+        const fetchResult = await EmbeddedListModel.findById(reqBody.listId)
+
+        let listDetail = fetchResult.toObject()
+        if (listDetail != null) {
+            if (userId == listDetail.owner) {
+                return addItemToOwnedList(userId, reqBody)
+            } 
+            else if (listDetail.members.includes(userId)) {
+                return addNewItemToUnownedList(userId, reqBody)
+            }
+            else {
+                logger.info("%o", new LogMessage("ListDetailImpl", "addNewItemToList", "Must either a list owner or a list member to add items.", {
+                    "listInfo": reqBody.listId, "userInfo": userId
+                }))
+                throw Error('Must be a member.')
+            }
+        }
+    } catch (err) {
+        logger.info("%o", new LogMessage("ListDetailImpl", "addItemToList", "Unable to add item to list.", {"error": err}))
+        throw err
+    }
+
+}
+
+async function addItemToOwnedList(userId, reqBody) {
     let input = newItemValidation((reqBody))
     if (input.error) {
         throw Error('Input validation failed. ' + input.error)
     }
+
     const newItem = new EmbeddedItemModel({
         name: reqBody.name,
         description: reqBody.description,
@@ -16,32 +45,67 @@ async function addItemToList(userId, reqBody) {
         quantity: reqBody.quantity,
         createdBy: userId
     })
+    
+    try {
+        let updatedList = await EmbeddedListModel.findByIdAndUpdate(reqBody.listId, {
+            $addToSet: {items: newItem}, lastUpdateDate: Date.now()
+        }, {
+            new: true
+        })
+
+        logger.info("%o", new LogMessage("ListDetailImpl", "addItemToOwnedList", "Successfully added item to list", {
+            "listInfo": reqBody.listId, "userInfo": userId
+        }))
+
+        const result = updatedList.toObject()
+        sanitizeListAttributes(result, userId)
+        return result
+
+    } catch (err) {
+        logger.info("%o", new LogMessage("ListDetailImpl", "addItemToOwnedList", "Unable to add item to list.", {"error": err}))
+        throw err
+    }
+}
+
+async function addNewItemToUnownedList(userId, reqBody) {
+    let input = newOffListItemValidation((reqBody))
+    if (input.error) {
+        throw Error('Input validation failed. ' + input.error)
+    }
+
+    const purchaseInfo = {
+        purchaserId: userId,
+        quantityPurchased: reqBody.quantityPurchased,
+    }
+
+    const newItem = new EmbeddedItemModel({
+        name: reqBody.name,
+        description: reqBody.description,
+        link: reqBody.link,
+        price: reqBody.price,
+        quantity: reqBody.quantityPurchased,
+        createdBy: userId,
+        offListItem: true,
+        purchaseDetails: {
+            purchasers: [purchaseInfo]
+        }
+    })
+    
 
     try {
-        const fetchResult = await EmbeddedListModel.findById(reqBody.listId)
-
-        let listDetail = fetchResult.toObject()
-        if (listDetail != null) {
-            if (userId !== listDetail.owner) {
-                logger.info("%o", new LogMessage("ListDetailImpl", "addItemToList", "Only list owner can add items.", {
-                    "listInfo": reqBody.listId, "userInfo": userId
-                }))
-                throw Error('Requester must be the owner')
-            }
-
-            let updatedList = await EmbeddedListModel.findByIdAndUpdate(reqBody.listId, {
-                $addToSet: {items: newItem}, lastUpdateDate: Date.now()
-            }, {
-                new: true
-            })
-
-            logger.info("%o", new LogMessage("ListDetailImpl", "addItemToList", "Successfully added item to list", {
-                "listInfo": reqBody.listId, "userInfo": userId
-            }))
-            return updatedList
-        }
+        let updatedList = await EmbeddedListModel.findByIdAndUpdate(reqBody.listId, {
+            $addToSet: {items: newItem}, lastUpdateDate: Date.now()
+        }, {
+            new: true
+        })
+        const result = updatedList.toObject()
+        sanitizeListAttributes(result, userId)
+        logger.info("%o", new LogMessage("ListDetailImpl", "addOffListItem", "Successfully added item to list", {
+            "listInfo": reqBody.listId, "userInfo": userId
+        }))
+        return result
     } catch (err) {
-        logger.info("%o", new LogMessage("ListDetailImpl", "addItemToList", "Unable to add item to list.", {"error": err}))
+        logger.info("%o", new LogMessage("ListDetailImpl", "addOffListItem", "Unable to add item to list.", {"error": err}))
         throw err
     }
 }
@@ -120,17 +184,17 @@ async function getOverviewsForList(userId) {
                     'path': '$listInfo.items'
                 }
             }, {
+                '$unwind': {
+                    'path': '$listInfo.items.purchaseDetails.purchasers'
+                }
+            }, {
                 '$group': {
                     '_id': '$_id',
                     'totalItems': {
-                        '$sum': 1
+                        '$sum': '$listInfo.items.quantity'
                     },
                     'purchasedItems': {
-                        '$sum': {
-                            '$cond': [
-                                '$listInfo.items.purchased', 1, 0
-                            ]
-                        }
+                        '$sum': '$listInfo.items.purchaseDetails.purchasers.quantityPurchased'
                     },
                     'listInfo': {
                         '$first': '$listInfo'
@@ -227,8 +291,15 @@ async function deleteItemFromList(listId, userId, itemId) {
         }, {
             "owner": 1, "items": {$elemMatch: {"_id": itemId}}
         })
-        let itemDetail = fetchResult.toObject()
-        if (userId !== itemDetail.owner) {
+        let listDetail = fetchResult.toObject()
+        let itemDetail = listDetail.items[0]
+        if (itemDetail == null) {
+            logger.info("%o", new LogMessage("ListDetailsImpl", "deleteItemFromList", "Unable to find the item.", {
+                "listInfo": listId, "itemInfo": itemId, "userInfo": userId
+            }))
+            throw Error('Cannot find item.')
+        }
+        if (userId !== itemDetail.createdBy) {
             logger.info("%o", new LogMessage("ListDetailsImpl", "deleteItemFromList", "Only item owners can delete items.", {
                 "listInfo": listId, "itemInfo": itemId, "userInfo": userId
             }))
@@ -267,6 +338,18 @@ function newItemValidation(data) {
     return schema.validate(data)
 }
 
+function newOffListItemValidation(data) {
+    const schema = Joi.object({
+        name: Joi.string().required(),
+        description: Joi.string().required(),
+        link: Joi.string().required(),
+        price: Joi.number().required(),
+        quantityPurchased: Joi.number().integer().required(),
+        listId: Joi.string().required()
+    })
+    return schema.validate(data)
+}
+
 function updateItemValidation(data) {
     const schema = Joi.object({
         name: Joi.string().required(),
@@ -281,4 +364,4 @@ function updateItemValidation(data) {
 }
 
 
-export default {addItemToList, getOverviewsForList, updateItem, deleteItemFromList};
+export default {addNewItemToList, getOverviewsForList, updateItem, deleteItemFromList};

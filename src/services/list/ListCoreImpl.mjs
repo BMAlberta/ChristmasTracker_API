@@ -1,5 +1,6 @@
 import { EmbeddedListModel } from '../../models/embeddedList.mjs';
 import { logger, LogMessage } from '../../config/winston.mjs';
+import { sanitizeListAttributes, sanitizeItemAttributes } from '../../util/sanitizeItems.mjs'
 import Joi from '@hapi/joi';
 
 //Get list details including users
@@ -12,17 +13,19 @@ export async function getListDetails(listId, userId, verbose) {
         const result = await EmbeddedListModel.findById(listId, projection)
         let listDetail = result.toObject()
         if (listDetail != null) {
-            if (userId === listDetail.owner) {
-                listDetail.items.forEach(item => delete (item.purchased))
-            } else {
-                listDetail.items.forEach(item => {
-                    if(userId === item.purchasedBy && item.purchased) {
-                        item.retractablePurchase = true
-                    } else {
-                        item.retractablePurchase = false
-                    }
-                })
-            }
+            // if (userId === listDetail.owner) {
+            //     listDetail.items.forEach(item => {
+            //         item.deleteAllowed = true
+            //         delete item.purchased
+            //         delete item.purchaseDetails
+            //     })
+            // } else {
+            //     listDetail.items.forEach(item => {
+            //         sanitizeItemAttributes(item, userId)
+            //     })
+            // }
+
+            sanitizeListAttributes(listDetail, userId)
             logger.info("%o", new LogMessage("ListCoreImpl", "Get list details", "Successfully retrieved list details.", {"listInfo": listId}))
             return listDetail
         } else {
@@ -159,4 +162,4 @@ function updateListValidation(data) {
 }
 
 
-export default {createList, updateList, deleteList, getListDetails, getOwnedLists, validateListStatus};
+export default {createList, updateList, deleteList, getListDetails, getOwnedLists, validateListStatus, sanitizeItemAttributes, sanitizeListAttributes};

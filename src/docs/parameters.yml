@@ -1,0 +1,56 @@
+components:
+  parameters:
+    Password:
+      name: password
+      description: User's password.
+      required: true
+      in: query
+      schema:
+        type: string
+  schemas:
+    LoginBody:
+      required:
+        - username
+        - password
+      type: object
+      properties:
+        username:
+          type: string
+          example: foo@gmail.com
+        password:
+          type: string
+          format: password
+          example: abcd1234
+    LoginSuccess: 
+      type: object
+      properties:
+        userInfo:
+          type: string
+          example: "abc123def456"
+    UserDetails:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "abc123def456"
+        lastLoginLocation:
+          type: string
+          example: 192.168.1.1
+        email:
+          type: string
+          example: foo@gmail.com
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        creationDate:
+          type: string
+          example: "2021-10-06T02:32:42.378Z"
+        lastLoginDate:
+          type: string
+          example: "2024-10-07T18:35:20.599Z"
+        lastPasswordChangeDate:
+          type: string
+          example: "2022-04-19T02:32:27.362Z"
