@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  version: 1.0.0
+  title: Christmas Tracker API
+  description: |-
+    This is a sample Pet Store Server based on the OpenAPI 3.0 specification.  You can find out more about
+    Swagger at [https://swagger.io](https://swagger.io). In the third iteration of the pet store, we've switched to the design first approach!
+    You can now help us improve the API whether it's by making changes to the definition itself or to the code.
+    That way, with time, we can improve the API in general, and expose some of the new features in OAS3.
+
+    _If you're looking for the Swagger 2.0/OAS 2.0 version of Petstore, then click [here](https://editor.swagger.io/?url=https://petstore.swagger.io/v2/swagger.yaml). Alternatively, you can load via the `Edit > Load Petstore OAS 2.0` menu option!_
+    
+    Some useful links:
+    - [The Pet Store repository](https://github.com/swagger-api/swagger-petstore)
+    - [The source API definition for the Pet Store](https://github.com/swagger-api/swagger-petstore/blob/master/src/main/resources/openapi.yaml)
+servers:
+  - url: https://api.bmalberta.com/tracker/
+tags:
+  - name: Auth
+    description: Logging In
+  - name: Lists
+    description: Operations on Lists
+  - name: Enrollment
+    description: Creating an account
+  - name: Stats
+    description: View purchase statistics
+  - name: User
+    description: Manage user settings
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Obtain a session
+      description: Logs a user in 
+      requestBody:
+        description: Username and password for the user requesting to log in.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginBody'
+        required: true
+      responses:
+        '200':
+          description: Successful login - userId is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccess'
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logoff
+      description: Terminates a user's session. 
+        This is no response API - there is no return value.
+      responses:
+        '200':
+          description: Successful logoff.
+          
+  /auth/password/update:
+    post:
+      tags:
+        - Auth
+      summary: Password update.
+      description: Updates the user's password.
+      requestBody:
+        description: Both new and old passwords are required. UserId and other
+          identifying attributes are retrieved from the headers.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginBody'
+        required: true
+      responses:
+        '200':
+          description: Successfully updated password - userId is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccess'
+  /users/{userId}:
+    get:
+      tags:
+        - User
+      summary: Get user details.
+      description: Gets the details of a user.
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Details of a user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+          
+components:
+  parameters:
+    Password:
+      name: password
+      description: User's password.
+      required: true
+      in: query
+      schema:
+        type: string
+  schemas:
+    LoginBody:
+      required:
+        - username
+        - password
+      type: object
+      properties:
+        username:
+          type: string
+          example: foo@gmail.com
+        password:
+          type: string
+          format: password
+          example: abcd1234
+    LoginSuccess: 
+      type: object
+      properties:
+        userInfo:
+          type: string
+          example: "abc123def456"
+    UserDetails:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "abc123def456"
+        lastLoginLocation:
+          type: string
+          example: 192.168.1.1
+        email:
+          type: string
+          example: foo@gmail.com
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        creationDate:
+          type: string
+          example: "2021-10-06T02:32:42.378Z"
+        lastLoginDate:
+          type: string
+          example: "2024-10-07T18:35:20.599Z"
+        lastPasswordChangeDate:
+          type: string
+          example: "2022-04-19T02:32:27.362Z"
+          

@@ -14,6 +14,12 @@ import listDetailRouter from './routes/list/listDetails.mjs';
 import listInviteRouter from './routes/list/listInvite.mjs';
 import listMemberRouter from './routes/list/listMembers.mjs';
 import statsRouter from './routes/statsRouter.mjs';
+import swaggerUi from 'swagger-ui-express'
+// import openapiSpecification from './swagger.mjs'
+
+import swaggerJSDoc from 'swagger-jsdoc';
+
+
 
 
 
@@ -34,6 +40,20 @@ export async function startServer() {
     app.use(morgan(format, {
         stream: networkLogger.stream
     }));
+
+    const options = {
+        failOnErrors: true,
+        definition: {
+          openapi: '3.1.0',
+          info: {
+            title: 'Hello World',
+            version: '1.0.0',
+          },
+        },
+        apis: ['./**/*.mjs', './docs/parameters.yml'], // files containing annotations as above
+      };
+    const openapiSpecification = swaggerJSDoc(options);
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpecification));
     
     app.use('/' + process.env.BASE_API_BATH + '/users', validateAuth, usersRouter)
     app.use('/' + process.env.BASE_API_BATH + '/stats', validateAuth, statsRouter)

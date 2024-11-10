@@ -17,12 +17,21 @@ router.get("/overviews", util.getUser, async (req, res) => {
 
 router.post("/addItem", util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {
-        const detail = await DetailImpl.addItemToList(res.userId, req.body)
+        const detail = await DetailImpl.addNewItemToList(res.userId, req.body)
         res.json(new DataResponse({detail}))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }
 })
+
+// router.post("/addOffListItem", util.getUser, CoreImpl.validateListStatus, async (req, res) => {
+//     try {
+//         const detail = await DetailImpl.addOffListItem(res.userId, req.body)
+//         res.json(new DataResponse({detail}))
+//     } catch (err) {
+//         res.status(500).json(new ErrorResponse(err.message));
+//     }
+// })
 
 router.patch('/update', util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {

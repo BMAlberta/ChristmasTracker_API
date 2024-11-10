@@ -1,5 +1,6 @@
 import { EmbeddedListModel } from '../../models/embeddedList.mjs';
 import { logger, LogMessage } from '../../config/winston.mjs';
+import { sanitizeListAttributes } from '../../util/sanitizeItems.mjs'
 import Joi from '@hapi/joi';
 
 async function purchaseItem(userId, reqBody) {
@@ -19,19 +20,26 @@ async function purchaseItem(userId, reqBody) {
                 }))
                 throw Error('Requestor cannot be the owner.')
             }
+            
+        const purchaseInfo = {
+            purchaserId: userId,
+            quantityPurchased: reqBody.quantityPurchased,
+            datePurchased: Date.now()
+        }
 
-            let updatedList = await EmbeddedListModel.findOneAndUpdate({
+        let updatedList = await EmbeddedListModel.findOneAndUpdate({
                 '_id': reqBody.listId, 'items._id': reqBody.itemId
             }, {
-                'items.$.purchased': true, 'items.$.purchaseDate': Date.now(), 'items.$.purchasedBy': userId
+                $addToSet: {'items.$.purchaseDetails.purchasers': purchaseInfo}, 'items.$.purchaseDate': Date.now()
             }, {
                 new: true
             })
-
             logger.info("%o", new LogMessage("ListPurchasesImpl", "purchaseItem", "Successfully marked item as purchased.", {
                 "listInfo": reqBody.listId, "itemInfo": reqBody.itemId
             }))
-            return updatedList
+            const result = updatedList.toObject()
+            sanitizeListAttributes(result, userId)
+            return result
         }
     } catch (err) {
         logger.info("%o", new LogMessage("ListPurchasesImpl", "purchaseItem", "Unable to mark item as purchased.", {
@@ -63,21 +71,31 @@ async function retractItemPurchase(userId, reqBody) {
                 throw Error('Requester cannot be the owner.')
             }
 
-            let purchaser = listDetail.items[0].purchasedBy
-            if (userId !== purchaser && purchaser != null) {
+            let purchaserDetails = listDetail.items[0].purchaseDetails.purchasers
+            if (purchaserDetails.length == 0) {
+                logger.info("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "No purchasers to retract.", {
+                    "listInfo": reqBody.listId,
+                    "itemInfo": reqBody.itemId,
+                    "userInfo": userId
+                }))
+                throw Error('No purchases to retract.')
+            }
+
+            let purchasers = purchaserDetails.map(details => details.purchaserId)
+            if (!purchasers.includes(userId)) {
                 logger.info("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "Only purchaser can retract a purchase.", {
                     "listInfo": reqBody.listId,
                     "itemInfo": reqBody.itemId,
-                    "listIndo": reqBody.listId,
                     "userInfo": userId
                 }))
                 throw Error('Requester must be the purchaser.')
             }
 
+            
             let updatedList = await EmbeddedListModel.findOneAndUpdate({
                 '_id': reqBody.listId, 'items._id': reqBody.itemId
             }, {
-                'items.$.purchased': false, 'items.$.purchaseDate': Date.now(), $unset: {'items.$.purchasedBy': 1}
+                    $pull: { 'items.$.purchaseDetails.purchasers': { purchaserId: userId } } 
             }, {
                 new: true
             })
@@ -85,7 +103,9 @@ async function retractItemPurchase(userId, reqBody) {
             logger.info("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "Successfully retracted purchase.", {
                 "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId
             }))
-            return updatedList
+            const result = updatedList.toObject()
+            sanitizeListAttributes(result, userId)
+            return result
         }
     } catch (err) {
         logger.info("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "Unable to retract purchase", {"error": err}))
@@ -95,7 +115,9 @@ async function retractItemPurchase(userId, reqBody) {
 
 function purchaseDataValidation(data) {
     const schema = Joi.object({
-        listId: Joi.string().min(24).max(24).required(), itemId: Joi.string().min(24).max(24).required()
+        listId: Joi.string().min(24).max(24).required(), 
+        itemId: Joi.string().min(24).max(24).required(),
+        quantityPurchased: Joi.number().integer()
     })
     return schema.validate(data);
 }

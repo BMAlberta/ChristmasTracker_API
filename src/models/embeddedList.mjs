@@ -37,6 +37,23 @@ const embeddedItemSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    purchaseDetails: {
+        purchasers: [
+            {
+                purchaserId: {
+                    type: String
+                },
+                quantityPurchased: {
+                    type: Number
+                },
+                datePurchased: {
+                    type: Date,
+                    required: true,
+                    default: Date.now
+                }
+            }
+        ]
+    },
     creationDate: {
         type: Date,
         required: true,
@@ -50,6 +67,11 @@ const embeddedItemSchema = new mongoose.Schema({
     purchaseDate: {
         type: Date,
         required: false
+    },
+    offListItem: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 

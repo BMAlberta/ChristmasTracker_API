@@ -2,6 +2,57 @@ import { logger, LogMessage } from '../../config/winston.mjs';
 import { EmbeddedListModel } from '../../models/embeddedList.mjs';
 import Joi from '@hapi/joi';
 
+
+
+async function getJoinedLists(userId) {
+    try {
+        let fetchResult = await EmbeddedListModel.aggregate([
+            {
+              '$match': {
+                '$and': [
+                  {
+                    'members': {
+                      '$in': [
+                        userId
+                      ]
+                    }
+                  }, {
+                    'owner': {
+                      '$ne': userId
+                    }
+                  }, {
+                    'status': {
+                      '$eq': 'active'
+                    }
+                  }
+                ]
+              }
+            }, {
+              '$addFields': {
+                'convertedMemberId': {
+                  '$toObjectId': '$_id'
+                }
+              }
+            }, {
+              '$project': {
+                '_id': 0, 
+                'listName': '$name', 
+                'listId': {
+                  '$toString': '$_id'
+                }
+              }
+            }
+          ]
+        )
+        logger.info("%o", new LogMessage("ListMembersImpl", "getJoinedLists", "Succesfully fetched joined lists..", {"userId": userId}))
+        return fetchResult
+    } catch (err) {
+        logger.info("%o", new LogMessage("ListMembersImpl", "getJoinedLists", "Unable to fetch joined lists for user.", {"error": err, "userId": userId}))
+        throw err
+    }
+}
+
+
 async function removeUserFromList(requesterId, reqBody) {
 
     let input = memberChangeValidation(reqBody)
@@ -97,5 +148,5 @@ function unsubscribeValidation(data) {
 }
 
 export default {
-    removeUserFromList, removeSelfFromList
+    removeUserFromList, removeSelfFromList, getJoinedLists
 };
