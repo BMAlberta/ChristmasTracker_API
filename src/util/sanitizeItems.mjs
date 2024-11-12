@@ -5,6 +5,7 @@ export function sanitizeItemAttributes(itemModel, userId) {
     itemModel.purchasesAllowed = purchaseAttributes.purchasesAllowed
     itemModel.quantityPurchased = purchaseAttributes.quantityPurchased
     itemModel.deleteAllowed = calculateDeleteAllowed(itemModel, userId)
+    itemModel.editAllowed = calculateEditAllowed(itemModel, userId)
     delete itemModel.purchaseDetails
     delete itemModel.purchased
 }
@@ -31,14 +32,18 @@ function generatePurchaseAttributes(itemModel, userId) {
 }
 
 function calculatePurchasesAllowed(itemModel, userId) {
-    return userId !== itemModel.owner
+    return userId !== itemModel.createdBy
+}
+
+function calculateEditAllowed(itemModel, userId) {
+    return userId === itemModel.createdBy
 }
 
 function calculateDeleteAllowed(itemModel, userId) {
-    return userId == itemModel.createdBy
+    return userId === itemModel.createdBy
 }
 
-function calculatePurchaseState(itemModel, userId) {
+export function calculatePurchaseState(itemModel, userId) {
     
     const PurhcaseStateEnum = Object.freeze({
         AVAILABLE: "available",
@@ -110,4 +115,4 @@ function calculatePurchaseState(itemModel, userId) {
     }
 }
 
-export default { sanitizeListAttributes, sanitizeItemAttributes };
+export default { sanitizeListAttributes, sanitizeItemAttributes, calculatePurchaseState };

@@ -4,6 +4,7 @@ import NetworkUtils from '../util/request.mjs';
 import { DataResponse, ErrorResponse } from '../models/payload.mjs';
 import AuthServiceImpl from '../services/AuthServiceImpl.mjs';
 import util from '../middleware/session.mjs';
+import { logger, LogMessage } from '../config/winston.mjs';
 
 /**
    * @swagger
@@ -32,8 +33,15 @@ import util from '../middleware/session.mjs';
 router.post("/login", async (req, res) => {
     try {
         let metadata = NetworkUtils.getCallerIP(req)
-        const userInfo = await AuthServiceImpl.doLogin(req.session, req.body, metadata)
-        res.json(new DataResponse({userInfo}))
+        if (!NetworkUtils.checkAppVersion(req)) {
+            logger.info("%o", new LogMessage("AuthRouter", "postLogin", "App version not valid."))
+            res.status(401).json({
+                error: "Invalid app version"
+            });
+        } else {
+            const userInfo = await AuthServiceImpl.doLogin(req.session, req.body, metadata)
+            res.json(new DataResponse({userInfo}))
+        }
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }

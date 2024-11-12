@@ -184,18 +184,16 @@ async function getOverviewsForList(userId) {
                     'path': '$listInfo.items'
                 }
             }, {
-                '$unwind': {
-                    'path': '$listInfo.items.purchaseDetails.purchasers'
-                }
-            }, {
                 '$group': {
                     '_id': '$_id',
                     'totalItems': {
                         '$sum': '$listInfo.items.quantity'
                     },
                     'purchasedItems': {
-                        '$sum': '$listInfo.items.purchaseDetails.purchasers.quantityPurchased'
-                    },
+                        '$sum': {
+                          '$cond': ['$listInfo.items.purchased', 1, 0]
+                        }
+                      },
                     'listInfo': {
                         '$first': '$listInfo'
                     },
@@ -265,7 +263,7 @@ async function updateItem(userId, reqBody) {
                 'items.$.description': reqBody.description,
                 'items.$.link': reqBody.link,
                 'items.$.price': reqBody.price,
-                'items.$.quantity': reqBody.price,
+                'items.$.quantity': reqBody.quantity,
                 'items.$.lastEditDate': Date.now()
             }, {
                 new: true
@@ -273,7 +271,9 @@ async function updateItem(userId, reqBody) {
             logger.info("%o", new LogMessage("ListDetailImpl", "updateItem", "Successfully updated item.", {
                 "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId
             }))
-            return updatedList
+            const result = updatedList.toObject()
+            sanitizeListAttributes(result, userId)
+            return result
         }
     } catch (err) {
         logger.info("%o", new LogMessage("ListDetailImpl", "updateItem", "Unable to update item.", {

@@ -16,4 +16,13 @@ function getCallerIP(request) {
     }
 }
 
-export default { getCallerIP };
+function checkAppVersion(request) {
+    const deviceAppVersion = request.headers['av']
+    const minimumAllowedVersion = process.env.MINIMUM_AV
+    if (deviceAppVersion == null) {
+        return false
+    }
+    return deviceAppVersion >= minimumAllowedVersion
+}
+
+export default { getCallerIP, checkAppVersion };
