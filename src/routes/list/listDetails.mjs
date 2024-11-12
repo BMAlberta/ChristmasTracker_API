@@ -24,19 +24,10 @@ router.post("/addItem", util.getUser, CoreImpl.validateListStatus, async (req, r
     }
 })
 
-// router.post("/addOffListItem", util.getUser, CoreImpl.validateListStatus, async (req, res) => {
-//     try {
-//         const detail = await DetailImpl.addOffListItem(res.userId, req.body)
-//         res.json(new DataResponse({detail}))
-//     } catch (err) {
-//         res.status(500).json(new ErrorResponse(err.message));
-//     }
-// })
-
 router.patch('/update', util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {
-        let result = await DetailImpl.updateItem(res.userId, req.body)
-        res.json(new DataResponse({result}));
+        let detail = await DetailImpl.updateItem(res.userId, req.body)
+        res.json(new DataResponse({detail}));
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }
