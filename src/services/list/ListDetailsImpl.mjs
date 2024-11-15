@@ -2,6 +2,8 @@ import { logger, LogMessage } from '../../config/winston.mjs';
 import { EmbeddedListModel, EmbeddedItemModel } from '../../models/embeddedList.mjs';
 import { sanitizeListAttributes, sanitizeItemAttributes } from '../../util/sanitizeItems.mjs'
 import Joi from '@hapi/joi';
+import { ObjectId } from 'mongodb';
+
 
 
 
@@ -70,12 +72,13 @@ async function addItemToOwnedList(userId, reqBody) {
 async function addNewItemToUnownedList(userId, reqBody) {
     let input = newOffListItemValidation((reqBody))
     if (input.error) {
+        logger.info("%o", new LogMessage("ListDetailImpl", "addNewItemToUnownedList", "Input validation failed", {"error": input.error}))
         throw Error('Input validation failed. ' + input.error)
     }
 
     const purchaseInfo = {
         purchaserId: userId,
-        quantityPurchased: reqBody.quantityPurchased,
+        quantityPurchased: reqBody.quantity,
     }
 
     const newItem = new EmbeddedItemModel({
@@ -83,7 +86,7 @@ async function addNewItemToUnownedList(userId, reqBody) {
         description: reqBody.description,
         link: reqBody.link,
         price: reqBody.price,
-        quantity: reqBody.quantityPurchased,
+        quantity: reqBody.quantity,
         createdBy: userId,
         offListItem: true,
         purchaseDetails: {
@@ -184,14 +187,19 @@ async function getOverviewsForList(userId) {
                     'path': '$listInfo.items'
                 }
             }, {
+                '$unwind': {
+                    'path': '$listInfo.items.purchaseDetails.purchasers',
+                    'preserveNullAndEmptyArrays': true
+                }
+            }, {
                 '$group': {
                     '_id': '$_id',
                     'totalItems': {
-                        '$sum': '$listInfo.items.quantity'
+                        '$sum': 1
                     },
                     'purchasedItems': {
                         '$sum': {
-                          '$cond': ['$listInfo.items.purchased', 1, 0]
+                          '$cond': ['$listInfo.items.purchaseDetails.purchasers.quantityPurchased', 1, 0]
                         }
                       },
                     'listInfo': {
@@ -238,7 +246,6 @@ async function getOverviewsForList(userId) {
     }
 }
 
-
 async function updateItem(userId, reqBody) {
     let input = updateItemValidation((reqBody))
     if (input.error) {
@@ -248,12 +255,17 @@ async function updateItem(userId, reqBody) {
     try {
         const fetchResult = await EmbeddedListModel.findById(reqBody.listId)
         let listDetail = fetchResult.toObject()
+
         if (listDetail != null) {
-            if (userId !== listDetail.owner) {
-                logger.info("%o", new LogMessage("ListDetailImpl", "updateItem", "Only list owners can update the list.", {
+            var convertedItemId = new ObjectId(reqBody.itemId)
+            var item = listDetail.items.find(obj => {
+            return String(obj._id) === reqBody.itemId
+            })
+            if (userId !== item.createdBy) {
+                logger.info("%o", new LogMessage("ListDetailImpl", "updateItem", "Only list or item owners can update an item.", {
                     "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId
                 }))
-                throw Error('Requester must be the owner.')
+                throw Error('Requester must be the owner/creator.')
             }
 
             let updatedList = await EmbeddedListModel.findOneAndUpdate({
@@ -277,7 +289,7 @@ async function updateItem(userId, reqBody) {
         }
     } catch (err) {
         logger.info("%o", new LogMessage("ListDetailImpl", "updateItem", "Unable to update item.", {
-            "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId
+            "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId, "error": err
         }))
         throw err
     }
@@ -325,7 +337,6 @@ async function deleteItemFromList(listId, userId, itemId) {
     }
 }
 
-
 function newItemValidation(data) {
     const schema = Joi.object({
         name: Joi.string().required(),
@@ -344,7 +355,7 @@ function newOffListItemValidation(data) {
         description: Joi.string().required(),
         link: Joi.string().required(),
         price: Joi.number().required(),
-        quantityPurchased: Joi.number().integer().required(),
+        quantity: Joi.number().integer().required(),
         listId: Joi.string().required()
     })
     return schema.validate(data)
