@@ -70,6 +70,7 @@ async function addItemToOwnedList(userId, reqBody) {
 }
 
 async function addNewItemToUnownedList(userId, reqBody) {
+
     let input = newOffListItemValidation((reqBody))
     if (input.error) {
         logger.info("%o", new LogMessage("ListDetailImpl", "addNewItemToUnownedList", "Input validation failed", {"error": input.error}))
@@ -117,15 +118,15 @@ async function getOverviewsForList(userId) {
     try {
 
         let fetchResult = await EmbeddedListModel.aggregate([
-            // {
-            //     '$match': {
-            //         'members': {
-            //             '$in': [
-            //                 userId
-            //             ]
-            //         }
-            //     }
-            // },
+            {
+                '$match': {
+                    'members': {
+                        '$in': [
+                            userId
+                        ]
+                    }
+                }
+            },
             {
                 '$match': {
                     'owner': {
