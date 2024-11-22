@@ -8,7 +8,7 @@ import util from '../middleware/session.mjs';
 router.get("/:id", async (req, res) => {
     try {
 
-        const user = await UserProfileServiceImpl.getUserOverview(req.params.id)
+        const user = await UserProfileServiceImpl.getUserOverview(req)
         res.json(new DataResponse({ user }))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
@@ -17,7 +17,7 @@ router.get("/:id", async (req, res) => {
 
 router.patch("/", util.getUser, async (req, res) => {
     try {
-        const result = await UserProfileServiceImpl.updateUser(res.userId, req.body)
+        const result = await UserProfileServiceImpl.updateUser(res.userId, req)
         res.json(new DataResponse(result))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));

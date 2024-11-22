@@ -3,11 +3,13 @@ import { logger, LogMessage } from '../../config/winston.mjs';
 import { sanitizeListAttributes } from '../../util/sanitizeItems.mjs'
 import Joi from '@hapi/joi';
 
-async function purchaseItem(userId, reqBody) {
+async function purchaseItem(userId, req) {
+    let reqBody = req.body
     let input = purchaseDataValidation(reqBody)
 
     if (input.error) {
-        throw Error('Input validation failed.')
+        logger.warn("%o", new LogMessage("ListDetailImpl", "purchaseItem", "Input validation failed", {"error": input.error}, req))
+      throw Error('Input validation failed. ' + input.error)
     }
 
     try {
@@ -15,9 +17,9 @@ async function purchaseItem(userId, reqBody) {
         let listDetail = fetchResult.toObject()
         if (listDetail != null) {
             if (userId === listDetail.owner) {
-                logger.info("%o", new LogMessage("ListPurchasesImpl", "purchaseItem", "List owner cannot mark item as purchased.", {
+                logger.warn("%o", new LogMessage("ListPurchasesImpl", "purchaseItem", "List owner cannot mark item as purchased.", {
                     "listInfo": reqBody.listId, "itemInfo": reqBody.itemId
-                }))
+                }, req))
                 throw Error('Requestor cannot be the owner.')
             }
             
@@ -36,24 +38,26 @@ async function purchaseItem(userId, reqBody) {
             })
             logger.info("%o", new LogMessage("ListPurchasesImpl", "purchaseItem", "Successfully marked item as purchased.", {
                 "listInfo": reqBody.listId, "itemInfo": reqBody.itemId
-            }))
+            }, req))
             const result = updatedList.toObject()
             sanitizeListAttributes(result, userId)
             return result
         }
     } catch (err) {
-        logger.info("%o", new LogMessage("ListPurchasesImpl", "purchaseItem", "Unable to mark item as purchased.", {
+        logger.warn("%o", new LogMessage("ListPurchasesImpl", "purchaseItem", "Unable to mark item as purchased.", {
             "listInfo": reqBody.listId, "itemInfo": reqBody.itemId
-        }))
+        }, req))
         throw err
     }
 }
 
-async function retractItemPurchase(userId, reqBody) {
+async function retractItemPurchase(userId, req) {
+    let reqBody = req.body
     let input = purchaseDataValidation(reqBody)
 
     if (input.error) {
-        throw Error('Input validation failed.')
+        logger.warn("%o", new LogMessage("ListDetailImpl", "retractItemPurchase", "Input validation failed", {"error": input.error}, req))
+      throw Error('Input validation failed. ' + input.error)
     }
 
     try {
@@ -65,29 +69,29 @@ async function retractItemPurchase(userId, reqBody) {
         let listDetail = fetchResult.toObject()
         if (listDetail != null) {
             if (userId === listDetail.owner) {
-                logger.info("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "List owner cannot retract a purchase.", {
+                logger.warn("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "List owner cannot retract a purchase.", {
                     "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId
-                }))
+                }, req))
                 throw Error('Requester cannot be the owner.')
             }
 
             let purchaserDetails = listDetail.items[0].purchaseDetails.purchasers
             if (purchaserDetails.length == 0) {
-                logger.info("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "No purchasers to retract.", {
+                logger.warn("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "No purchasers to retract.", {
                     "listInfo": reqBody.listId,
                     "itemInfo": reqBody.itemId,
                     "userInfo": userId
-                }))
+                }, req))
                 throw Error('No purchases to retract.')
             }
 
             let purchasers = purchaserDetails.map(details => details.purchaserId)
             if (!purchasers.includes(userId)) {
-                logger.info("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "Only purchaser can retract a purchase.", {
+                logger.warn("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "Only purchaser can retract a purchase.", {
                     "listInfo": reqBody.listId,
                     "itemInfo": reqBody.itemId,
                     "userInfo": userId
-                }))
+                }, req))
                 throw Error('Requester must be the purchaser.')
             }
 
@@ -102,13 +106,13 @@ async function retractItemPurchase(userId, reqBody) {
 
             logger.info("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "Successfully retracted purchase.", {
                 "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId
-            }))
+            }, req))
             const result = updatedList.toObject()
             sanitizeListAttributes(result, userId)
             return result
         }
     } catch (err) {
-        logger.info("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "Unable to retract purchase", {"error": err}))
+        logger.warn("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "Unable to retract purchase", {"error": err}, req))
         throw err
     }
 }

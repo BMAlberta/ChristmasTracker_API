@@ -1,16 +1,17 @@
 import { logger, LogMessage } from '../config/winston.mjs';
 import { EmbeddedListModel } from '../models/embeddedList.mjs';
 
-async function getPurchaseOverviews(userId) {
+async function getPurchaseOverviews(userId, req) {
     try {
 
         let newAggregation = await getPurchaseOverviewsNew(userId)
         let legacyAggregation = await getPurchaseOverviewsLegacy(userId)
         newAggregation = newAggregation.concat(legacyAggregation)
+        logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Successfully calculated spending overviews.", {"userInfo": userId}, req))
         return newAggregation
         
     } catch (err) {
-        logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Unable calcuate spending overviews", {"error": err}))
+        logger.warn("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Unable calcuate spending overviews", {"error": err}, req))
         throw err
     }
 }
@@ -113,7 +114,7 @@ async function getPurchaseOverviewsNew(userId) {
         logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Successfully calculated spending overviews.", {"userInfo": userId}))
         return fetchResult
     } catch (err) {
-        logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Unable calcuate spending overviews", {"error": err}))
+        logger.warn("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Unable calcuate spending overviews", {"error": err}))
         throw err
     }
 }
@@ -204,7 +205,7 @@ async function getPurchaseOverviewsLegacy(userId) {
         logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Successfully calculated spending overviews.", {"userInfo": userId}))
         return fetchResult
     } catch (err) {
-        logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Unable calcuate spending overviews", {"error": err}))
+        logger.warn("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Unable calcuate spending overviews", {"error": err}))
         throw err
     }
 }

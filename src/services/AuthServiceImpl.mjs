@@ -1,14 +1,19 @@
 import bcrypt from 'bcryptjs';
 import UserModel from '../models/user.mjs';
+import NetworkUtils from '../util/request.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
 import Joi from '@hapi/joi';
 import { ValidationError } from '../config/errors.mjs';
 
-async function doLogin(session, reqBody, requestMetaData) {
+async function doLogin(req) {
+    var session = req.session
+    let reqBody = req.body
+    let requestMetaData = NetworkUtils.getCallerIP(req)
     let input = loginValidation(reqBody)
 
     if (input.error) {
-        throw new ValidationError(input.error)
+        logger.warn("%o", new LogMessage("ListDetailImpl", "doLogin", "Input validation failed", {"error": input.error}, req))
+        throw Error('Input validation failed. ' + input.error)
     }
 
     // Find user by email
@@ -16,19 +21,19 @@ async function doLogin(session, reqBody, requestMetaData) {
     try {
         user = await UserModel.findOne({ email: reqBody.email })
     } catch (err) {
-        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to query for users", { "user": reqBody.email, "ip": loginIp }))
+        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to query for users", { "user": reqBody.email, "ip": loginIp }, req))
         throw Error("Query failed.")
     }
 
     if (!user) {
-        logger.info("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to find user.", { "userId": reqBody.email }))
+        logger.info("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to find user.", { "userId": reqBody.email }, req))
         throw Error('User not found.')
     }
 
     // Validate password
     let validPassword = await bcrypt.compare(reqBody.password, user.pwd)
     if (!validPassword) {
-        logger.info("%o", new LogMessage("AuthServiceImpl", "doLogin", "Password validation failed", { "userId": reqBody.email }))
+        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Password validation failed", { "userId": reqBody.email }, req))
         throw Error('Credential validation failed.')
     }
 
@@ -41,7 +46,7 @@ async function doLogin(session, reqBody, requestMetaData) {
             lastLogInDate: Date.now()
         })
     } catch (err) {
-        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to update login IP", { "user": user._id, "ip": loginIp }))
+        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to update login IP", { "user": user._id, "ip": loginIp }, req))
     }
 
     session.details = {
@@ -51,31 +56,35 @@ async function doLogin(session, reqBody, requestMetaData) {
     // Update session
     try {
         await session.save()
-        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Login successful", { "user": user._id, "session": session.details }))
+        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Login successful", { "user": user._id, "session": session.details }, req))   
+
         return user._id
     } catch (err) {
-        logger.warn("%o", new LogMessage("AuthSerivceImpl", "doLogin", "Session generation failed", { "user": user._id, "error": err }))
+        logger.warn("%o", new LogMessage("AuthSerivceImpl", "doLogin", "Session generation failed", { "user": user._id, "error": err }, req))
         throw err
     }
 }
 
-async function doLogout(session) {
+async function doLogout(req) {
     try {
+        const session = req.session
         const localId = session.id
         await session.destroy()
-        logger.debug("%o", new LogMessage("AuthServiceImpl", "doLogout", "Logout successful.", { "sessionId": localId}))
+        logger.debug("%o", new LogMessage("AuthServiceImpl", "doLogout", "Logout successful.", { "sessionId": localId}, req))
 
     } catch (err) {
-        logger.debug("%o", new LogMessage("AuthServiceImpl", "doLogout", "Logout failed.", { "error": err}))
+        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogout", "Logout failed.", { "error": err}, req))
         throw err
     }
 }
 
-async function updatePassword(requester, reqBody) {
+async function updatePassword(requester, req) {
+    let reqBody = req.body
     let input = changePasswordValidation(reqBody)
 
     if (input.error) {
-        throw new ValidationError(input.error)
+        logger.warn("%o", new LogMessage("ListDetailImpl", "updatePassword", "Input validation failed", {"error": input.error}, req))
+        throw Error('Input validation failed. ' + input.error)
     }
 
     try {
@@ -83,7 +92,7 @@ async function updatePassword(requester, reqBody) {
         const validOldPassword = await bcrypt.compare(reqBody.oldPassword, user.pwd)
 
         if (!validOldPassword) {
-            logger.debug("%o", new LogMessage("AuthServiceImpl", "updatePassword", "Password validation failed.", { "userId": user._id}))
+            logger.warn("%o", new LogMessage("AuthServiceImpl", "updatePassword", "Password validation failed.", { "userId": user._id}, req))
             throw Error('Password validation failed')
         }
 
@@ -94,10 +103,10 @@ async function updatePassword(requester, reqBody) {
                 pwd: saltedPassword,
                 lastPasswordChange: Date.now()
         })
-        logger.debug("%o", new LogMessage("AuthServiceImpl", "updatePassword", "Update password successful.", { "userId": user._id}))
+        logger.debug("%o", new LogMessage("AuthServiceImpl", "updatePassword", "Update password successful.", { "userId": user._id}, req))
         return user
     } catch (err) {
-        logger.debug("%o", new LogMessage("AuthServiceImpl", "doLogout", "Change password failed.", { "error": err}))
+        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogout", "Change password failed.", { "error": err},req))
         throw err
     }
 }

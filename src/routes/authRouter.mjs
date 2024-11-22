@@ -34,12 +34,12 @@ router.post("/login", async (req, res) => {
     try {
         let metadata = NetworkUtils.getCallerIP(req)
         if (!NetworkUtils.checkAppVersion(req)) {
-            logger.info("%o", new LogMessage("AuthRouter", "postLogin", "App version not valid."))
+            logger.warn("%o", new LogMessage("AuthRouter", "postLogin", "App version not valid.", { "userId": req.body.email }))
             res.status(401).json({
                 error: "Invalid app version"
             });
         } else {
-            const userInfo = await AuthServiceImpl.doLogin(req.session, req.body, metadata)
+            const userInfo = await AuthServiceImpl.doLogin(req)
             res.json(new DataResponse({userInfo}))
         }
     } catch (err) {
@@ -62,7 +62,7 @@ router.post("/login", async (req, res) => {
    */
 router.post("/logout", async (req, res) => {
     try {
-        await AuthServiceImpl.doLogout(req.session)
+        await AuthServiceImpl.doLogout(req)
         res.json(new DataResponse({"status": "success"}))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
@@ -95,8 +95,8 @@ router.post("/logout", async (req, res) => {
    */
 router.post("/password/update", util.getUser, async (req, res) => {
     try {
-        const result = await AuthServiceImpl.updatePassword(res.userId, req.body)
-        res.json(new DataResponse(result._id))
+        const result = await AuthServiceImpl.updatePassword(res.userId, req)
+        res.json(new DataResponse({"userId": result._id}))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }

@@ -8,7 +8,7 @@ import CoreImpl from '../../services/list/ListCoreImpl.mjs';
 
 router.post("/", util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {
-        const detail = await PurchaseImpl.purchaseItem(res.userId, req.body)
+        const detail = await PurchaseImpl.purchaseItem(res.userId, req)
         res.json(new DataResponse({detail}))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
@@ -17,7 +17,7 @@ router.post("/", util.getUser, CoreImpl.validateListStatus, async (req, res) => 
 
 router.post("/retract", util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {
-        const detail = await PurchaseImpl.retractItemPurchase(res.userId, req.body)
+        const detail = await PurchaseImpl.retractItemPurchase(res.userId, req)
         res.json(new DataResponse({detail}))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));

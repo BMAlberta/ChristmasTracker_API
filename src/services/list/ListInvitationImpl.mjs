@@ -4,27 +4,29 @@ import Invite from '../../models/invitation.mjs';
 import OTPGenerator from 'otp-generator';
 import Joi from '@hapi/joi';
 
-async function createInvitationToList(requesterId, reqBody) {
+async function createInvitationToList(requesterId, req) {
+    let reqBody = req.body
     let input = inviteValidation(reqBody)
 
     if (input.error) {
-        throw Error('Input validation failed. ' + input.err)
+        logger.warn("%o", new LogMessage("ListDetailImpl", "createInvitationToList", "Input validation failed", {"error": input.error}, req))
+        throw Error('Input validation failed. ' + input.error)
     }
 
     let fetchResult = await EmbeddedListModel.findById(reqBody.listId)
     let listInContext = fetchResult.toObject()
 
     if (listInContext === null) {
-        logger.info("%o", new LogMessage("ListInvitationImpl", "createInvitation", "Unable to retrieve list.", {
+        logger.warn("%o", new LogMessage("ListInvitationImpl", "createInvitation", "Unable to retrieve list.", {
             "listInfo": reqBody.listId
-        }))
+        }, req))
         throw Error('Could not retrieve list.')
     }
 
     if (requesterId !== listInContext.owner) {
-        logger.info("%o", new LogMessage("ListInvitationImpl", "createInvitation", "Requester must be the owner.", {
+        logger.warn("%o", new LogMessage("ListInvitationImpl", "createInvitation", "Requester must be the owner.", {
             "listInfo": reqBody.listId, "userInfo": requesterId
-        }))
+        }, req))
         throw Error('Could not retrieve list.')
     }
 
@@ -38,37 +40,38 @@ async function createInvitationToList(requesterId, reqBody) {
         })
 
         const inviteCode = await invitation.save()
-        logger.info("%o", new LogMessage("ListInvitationImpl", "createInvitation", "Successfully generated list invitation.", {"listInfo": reqBody.listId}))
+        logger.info("%o", new LogMessage("ListInvitationImpl", "createInvitation", "Successfully generated list invitation.", {"listInfo": reqBody.listId}, req))
         return inviteCode
 
     } catch (err) {
-        logger.info("%o", new LogMessage("ListInvitationImpl", "createInvitation", "Unable to create invitation.", {"error": err}))
+        logger.warn("%o", new LogMessage("ListInvitationImpl", "createInvitation", "Unable to create invitation.", {"error": err}, req))
         throw err
     }
 }
 
-async function revokeInvitationToList(requesterId, reqBody) {
-
+async function revokeInvitationToList(requesterId, req) {
+    let reqBody = req.body
     let input = inviteRevokeValidation(reqBody)
 
     if (input.error) {
-        throw Error('Input validation failed. ' + input.err)
+        logger.warn("%o", new LogMessage("ListDetailImpl", "revokeInvitationToList", "Input validation failed", {"error": input.error}, req))
+        throw Error('Input validation failed. ' + input.error)
     }
 
     let fetchResult = await EmbeddedListModel.findById(reqBody.listId)
     let listInContext = fetchResult.toObject()
 
     if (listInContext === null) {
-        logger.info("%o", new LogMessage("ListInvitationImpl", "revokeInvitationToList", "Unable to retrieve list.", {
+        logger.warn("%o", new LogMessage("ListInvitationImpl", "revokeInvitationToList", "Unable to retrieve list.", {
             "listInfo": reqBody.listId
-        }))
+        }, req))
         throw Error('Could not retrieve list.')
     }
 
     if (requesterId !== listInContext.owner) {
-        logger.info("%o", new LogMessage("ListInvitationImpl", "revokeInvitationToList", "Requester must be the owner.", {
+        logger.warn("%o", new LogMessage("ListInvitationImpl", "revokeInvitationToList", "Requester must be the owner.", {
             "listInfo": reqBody.listId, "userInfo": requesterId
-        }))
+        }, req))
         throw Error('Could not retrieve list.')
     }
 
@@ -76,22 +79,23 @@ async function revokeInvitationToList(requesterId, reqBody) {
         await Invite.findByIdAndDelete(reqBody.inviteId)
         logger.info("%o", new LogMessage("ListInvitationImpl", "revokeInvitationToList", "Successfully deleted invitation.", {
             "listInd": reqBody.listId, "inviteInfo": reqBody.inviteId
-        }))
+        }, req))
         return {"status": "success"}
 
     } catch (err) {
-        logger.info("%o", new LogMessage("ListInvitationImpl", "revokeInvitationToList", "Unable to delete invitation.", {
+        logger.warn("%o", new LogMessage("ListInvitationImpl", "revokeInvitationToList", "Unable to delete invitation.", {
             "listInfo": reqBody.listId, "inviteInfo": reqBody.inviteId, "error": err.message
-        }))
+        }, req))
         throw err
     }
 }
 
-async function acceptInvitationToList(requesterId, reqBody) {
-
+async function acceptInvitationToList(requesterId, req) {
+    let reqBdy = req.body
     let input = inviteAcceptValidation(reqBody)
 
     if (input.error) {
+        logger.warn("%o", new LogMessage("ListDetailImpl", "acceptInvitationToList", "Input validation failed", {"error": input.error}, req))
         throw Error('Input validation failed. ' + input.error)
     }
 
@@ -102,14 +106,14 @@ async function acceptInvitationToList(requesterId, reqBody) {
         let inviteDetails = fetchResult.toObject()
 
         if (inviteDetails === null) {
-            logger.info("%o", new LogMessage("ListInvitationImpl", "acceptInvitationToList", "No invitation found.", {"inviteInfo": reqBody.inviteCode}))
+            logger.warn("%o", new LogMessage("ListInvitationImpl", "acceptInvitationToList", "No invitation found.", {"inviteInfo": reqBody.inviteCode}, req))
             throw Error('No active invitation found.')
         }
 
         if (requesterId !== inviteDetails.userId) {
-            logger.info("%o", new LogMessage("ListInvitationImpl", "acceptInvitationToList", "Requester must be invitee.", {
+            logger.warn("%o", new LogMessage("ListInvitationImpl", "acceptInvitationToList", "Requester must be invitee.", {
                 "inviteInfo": reqBody.inviteCode, "userInfo": requesterId
-            }))
+            }, req))
             throw Error('Only the invitee can accept an invitation.')
         }
 
@@ -118,13 +122,13 @@ async function acceptInvitationToList(requesterId, reqBody) {
         })
         logger.info("%o", new LogMessage("ListInvitationImpl", "acceptInvitationToList", "Successfully accepted invite.", {
             "inviteInfo": reqBody.inviteCode, "userInfo": requesterId
-        }))
+        }, req))
         return {"status": "success"}
 
     } catch (err) {
-        logger.info("%o", new LogMessage("ListInvitationImpl", "acceptInvitationToList", "Unable to accept invite.", {
+        logger.warn("%o", new LogMessage("ListInvitationImpl", "acceptInvitationToList", "Unable to accept invite.", {
             "inviteInfo": reqBody.inviteCode, "userInfo": requesterId
-        }))
+        }, req))
         throw Error('Unable to accept invite.')
     }
 
