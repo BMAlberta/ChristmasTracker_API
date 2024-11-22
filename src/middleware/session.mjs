@@ -31,7 +31,7 @@ export async function createSessionStore() {
 
 export function validateAuth(request, response, next) {
 	if (!request.session?.details?.userAuthenticated) {
-		logger.info("%o", new LogMessage("SessionManager", "validateAuth", "Session authentication not valid."))
+		logger.warn("%o", new LogMessage("SessionManager", "validateAuth", "Session authentication not valid."), request)
 		return response.status(401).json({
 			error: "Missing authentication"
 		});
@@ -45,7 +45,7 @@ export function validateAuth(request, response, next) {
 
 export function enrollmentActive(request, response, next) {
 	if (!request.session.user) {
-		logger.info("%o", new LogMessage("SessionManager", "enrollmentActive", "Session authentication not valid."))
+		logger.warn("%o", new LogMessage("SessionManager", "enrollmentActive", "Session authentication not valid."))
 		return response.status(401).json({
 			error: "Missing authentication"
 		});
@@ -67,7 +67,7 @@ export function getUser(req, res, next) {
 		}))
 		next()
 	} else {
-		logger.info("%o", new LogMessage("Validate Token", "getUser", "Unable to locate user.", {
+		logger.warn("%o", new LogMessage("Validate Token", "getUser", "Unable to locate user.", {
 			"userInfo": user
 		}))
 		return res.status(500).json({

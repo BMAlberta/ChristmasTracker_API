@@ -10,7 +10,9 @@ import Joi from '@hapi/joi';
 // Error Code Root: 100
 
 // Error Sub Code: 1
-async function enrollUser(session, reqBody) {
+async function enrollUser(req) {
+    let session = req.session
+    let reqBody = req.body
     //Validate input
     let input = enrollValidation(reqBody)
 
@@ -37,8 +39,9 @@ async function enrollUser(session, reqBody) {
 }
 
 // Error Sub Code: 2
-async function validateEmail(session, reqBody) {
-
+async function validateEmail(req) {
+    let session = req.session
+    let reqBody = req.body
     //Decrypt the token
     let rawTokenData = security.decrypt(reqBody.verificationKey)
     let verificationInfo = JSON.parse(rawTokenData)
@@ -49,9 +52,9 @@ async function validateEmail(session, reqBody) {
     const isEmailValid = providedEmail === expectedEmail
 
     if (isEmailValid === false) {
-        logger.info("%o", new LogMessage("EnrollmentServieImpl", "validateEmail", "Emails do not match", {
+        logger.warn("%o", new LogMessage("EnrollmentServieImpl", "validateEmail", "Emails do not match", {
             "expectedEmail": expectedEmail, "providedEmail": providedEmail
-        }))
+        }, req))
         throw Error('Emails do not match.')
     }
 
@@ -70,16 +73,18 @@ async function validateEmail(session, reqBody) {
 }
 
 // Error Sub Code: 3
-async function resendEmailValidation(reqBody) {
+async function resendEmailValidation(req) {
 }
 
 
 // Error Sub Code: 4
-async function createPassword(session, reqBody) {
+async function createPassword(req) {
+    let session = req.session
+    let reqBody = req.body
     const userValidated = session.details.enrollment.verified
 
     if (!userValidated) {
-        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "resendEmailValidation", "User session not verified"))
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "resendEmailValidation", "User session not verified"))
         throw Error('User session not verified.')
     }
 
@@ -106,20 +111,21 @@ async function createPassword(session, reqBody) {
 }
 
 // Error Sub Code: 5
-async function enrollUserWithAccessCode(reqBody) {
+async function enrollUserWithAccessCode(req) {
+    let reqBody = req.body
     let inputValidated = newUserWithAccessKeyValidation(reqBody)
     if (inputValidated.error) {
-        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.1: Input validation failed.", {
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.1: Input validation failed.", {
             "error": inputValidated.error.message
-        }))
+        }, req))
         throw Error("100.5.1")
     }
 
     let passwordsMatch = newPasswordValidation(reqBody)
     if (passwordsMatch.error) {
-        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.2: Password validation failed.", {
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.2: Password validation failed.", {
             "error": passwordsMatch.error.message
-        }))
+        }, req))
         throw Error("100.5.2")
     }
 
@@ -133,7 +139,7 @@ async function enrollUserWithAccessCode(reqBody) {
 
 
     if (reqBody.accessKey !== process.env.BASIC_ENROLLMENT_ACCESS_KEY) {
-        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.4: Access Key validation failed."))
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.4: Access Key validation failed."))
         throw Error("100.5.4")
     }
 
@@ -148,9 +154,9 @@ async function enrollUserWithAccessCode(reqBody) {
         let newUser = await createUser(combinedUserInfo)
         return newUser
     } catch (err){
-        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.5: User creation failed.", {
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.5: User creation failed.", {
             "error": err
-        }))
+        }, req))
         throw Error("100.5.5")
     }
 }
@@ -160,7 +166,7 @@ async function createUser(user) {
     let input = newUserValidation(user)
 
     if (input.error) {
-        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "createUser", "100.6.1: Input validation failed.", {
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "createUser", "100.6.1: Input validation failed.", {
             "error": input.error
         }))
         throw Error("100.5.4")
@@ -181,7 +187,7 @@ async function createUser(user) {
         }))
         return saveResult._id
     } catch (err) {
-        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "createUser", "Failed to save user.", {
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "createUser", "Failed to save user.", {
             "error": err.message
         }))
         throw err
@@ -196,7 +202,7 @@ async function isEmailRegistered(emailAddress) {
         })
 
         if (fetchResult) {
-            logger.info("%o", new LogMessage("EnrollmentServiceImpl", "isEmailRegistered", "Email already exists.", {
+            logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "isEmailRegistered", "Email already exists.", {
                 "userInfo": emailAddress
             }))
             return true
@@ -220,7 +226,7 @@ async function saveEnrollmentSession(session, details) {
     try {
         await session.save()
     } catch (err) {
-        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "saveEnrollmentSession", "Session generation failed.", {
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "saveEnrollmentSession", "Session generation failed.", {
             "userId": req.body.email, "error": err
         }))
     }
@@ -258,7 +264,7 @@ async function generateOTPCodeForEnrollment(emailAddress) {
         }))
         return encodedOTPModel
     } catch (err) {
-        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "generateOTPCodeForEnrollment", "OTP generation failed.", {
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "generateOTPCodeForEnrollment", "OTP generation failed.", {
             "userId": emailAddress, "error": err
         }))
     }
@@ -271,21 +277,21 @@ async function validateOTP(details, verificationInfo) {
 
         const otpMismatch = details.otp !== storedOTP.otpCode
         if (otpMismatch) {
-            logger.info("%o", new LogMessage("EnrollmentServiceImpl", "validateOTP", "OTP codes do not match", {
+            logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "validateOTP", "OTP codes do not match", {
                 "expectedOTP": storedOTP.otpCode, "providedOTP": details.otp
             }))
             throw Error('OTP codes do not match.')
         }
 
         if (Date() > storedOTP.expirationDate) {
-            logger.info("%o", new LogMessage("EnrollmentServiceImpl", "validateOTP", "OTP expired", {
+            logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "validateOTP", "OTP expired", {
                 "expirationDate": storedOTP.expirationDate
             }))
             throw Error('OTP expired.')
         }
 
         if (storedOTP.verified) {
-            logger.info("%o", new LogMessage("EnrollmentServiceImpl", "validateOTP", "OTP already used."))
+            logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "validateOTP", "OTP already used."))
             throw Error('OTP already used.')
         }
 
@@ -298,7 +304,7 @@ async function validateOTP(details, verificationInfo) {
         logger.info("%o", new LogMessage("EnrollmentServiceImpl", "validateOTP", "OTP validated."))
 
     } catch (err) {
-        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "validateOTP", "Unknown error occurred."))
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "validateOTP", "Unknown error occurred."))
         throw Error('Unable to validate OTP code.')
     }
 }

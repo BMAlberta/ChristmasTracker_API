@@ -4,8 +4,10 @@ import { sanitizeListAttributes, sanitizeItemAttributes } from '../../util/sanit
 import Joi from '@hapi/joi';
 
 //Get list details including users
-export async function getListDetails(listId, userId, verbose) {
+export async function getListDetails(req, userId) {
     let projection = {}
+    let listId = req.params.id
+    let verbose = req.verbose
     if (verbose === "false") {
         projection['items'] = 0
     }
@@ -13,33 +15,21 @@ export async function getListDetails(listId, userId, verbose) {
         const result = await EmbeddedListModel.findById(listId, projection)
         let listDetail = result.toObject()
         if (listDetail != null) {
-            // if (userId === listDetail.owner) {
-            //     listDetail.items.forEach(item => {
-            //         item.deleteAllowed = true
-            //         delete item.purchased
-            //         delete item.purchaseDetails
-            //     })
-            // } else {
-            //     listDetail.items.forEach(item => {
-            //         sanitizeItemAttributes(item, userId)
-            //     })
-            // }
-
             sanitizeListAttributes(listDetail, userId)
             logger.info("%o", new LogMessage("ListCoreImpl", "Get list details", "Successfully retrieved list details.", {"listInfo": listId}))
             return listDetail
         } else {
-            logger.info("%o", new LogMessage("ListCoreImpl", "Get list details", "Unable to find list details for provided ID.", {"listInfo": listId}))
+            logger.warn("%o", new LogMessage("ListCoreImpl", "Get list details", "Unable to find list details for provided ID.", {"listInfo": listId}))
             throw Error('No list matching that ID can be found.')
         }
     } catch (err) {
-        logger.info("%o", new LogMessage("ListCoreImpl", "Get list details", "Unable to retrieve list details.", {"listInfo": listId}))
+        logger.warn("%o", new LogMessage("ListCoreImpl", "Get list details", "Unable to retrieve list details.", {"listInfo": listId}))
         throw err
     }
 }
 
 // Get list for owner
-export async function getOwnedLists(userId) {
+export async function getOwnedLists(userId, req) {
     try {
         const result = await EmbeddedListModel.find({ 'owner': userId }, {
             'name': 1,
@@ -48,16 +38,17 @@ export async function getOwnedLists(userId) {
             'status': 1,
             'members': 1
         })
-        logger.info("%o", new LogMessage("ListCoreImpl", "getOwnedLists", "Successfully retrieved list details.", {"userInfo": userId}))
+        logger.info("%o", new LogMessage("ListCoreImpl", "getOwnedLists", "Successfully retrieved list details.", {"userInfo": userId}, req))
             return result
     } catch (err) {
-        logger.info("%o", new LogMessage("ListCoreImpl", "getOwnedLists", "Unable to retrieve list details.", {"userInfo": userId}))
+        logger.warn("%o", new LogMessage("ListCoreImpl", "getOwnedLists", "Unable to retrieve list details.", {"userInfo": userId}, req))
             throw err
     }
 }
 
 //Create a new list
-export async function createList(userId, reqBody) {
+export async function createList(userId, req) {
+    let reqBody = req.body
 // Validate input
     let input = newListValidation(reqBody)
 
@@ -69,19 +60,21 @@ export async function createList(userId, reqBody) {
     })
     try {
         const newList = await list.save()
-        logger.info("%o", new LogMessage("ListCoreImpl", "createList", "Successfully created list.", {"listInfo": newList._id}))
+        logger.info("%o", new LogMessage("ListCoreImpl", "createList", "Successfully created list.", {"listInfo": newList._id}, req))
         return newList
     } catch (err) {
-        logger.info("%o", new LogMessage("ListCoreImpl", "createList", "Unable to create list.", {
+        logger.warn("%o", new LogMessage("ListCoreImpl", "createList", "Unable to create list.", {
             "listInfo": list, "error": err.message
-        }))
+        }, req))
         throw err
     }
 }
 
 //Update a list
-export async function updateList(listId, userId, reqBody) {
+export async function updateList(req, userId) {
 
+    let listId = req.params.id
+    let reqBody = req.body
     let input = updateListValidation(reqBody)
 
     if (input.error) {
@@ -91,36 +84,37 @@ export async function updateList(listId, userId, reqBody) {
     try {
         const fetchResult = await EmbeddedListModel.findById(listId, {'items': 0})
         if (userId !== fetchResult.owner) {
-            logger.info("%o", new LogMessage("ListCoreImpl", "updateList", "Requester is not list owner", {"listInfo": listId}))
+            logger.warn("%o", new LogMessage("ListCoreImpl", "updateList", "Requester is not list owner", {"listInfo": listId}, req))
             throw Error('Requester is not list owner.')
         }
         fetchResult.name = reqBody.listName
         fetchResult.lastUpdateDate = Date.now()
         return await fetchResult.save()
     } catch (err) {
-        logger.info("%o", new LogMessage("ListCoreImpl", "updateList", "Unable to update list.", {
+        logger.warn("%o", new LogMessage("ListCoreImpl", "updateList", "Unable to update list.", {
             "listInfo": listId, "error": err.message
-        }))
+        }, req))
         throw err
     }
 }
 
 //Delete a list
-export async function deleteList(listId, userId) {
+export async function deleteList(req, userId) {
+    let listId = req.params.id
     try {
         const fetchResult = await EmbeddedListModel.findById(listId, {'owner': 1})
         if (userId !== fetchResult.owner) {
-            logger.info("%o", new LogMessage("ListCoreImpl", "deleteList", "Requester is not list owner", {"listInfo": listId}))
+            logger.info("%o", new LogMessage("ListCoreImpl", "deleteList", "Requester is not list owner", {"listInfo": listId}, req))
             return false
         }
-        await fetchResult.remove()
-        logger.info("%o", new LogMessage("ListCoreImpl", "deleteList", "Successfully deleted list.", {"listInfo": listId}))
+        await fetchResult.deleteOne()
+        logger.info("%o", new LogMessage("ListCoreImpl", "deleteList", "Successfully deleted list.", {"listInfo": listId}, req))
 
         return true
     } catch (err) {
-        logger.info("%o", new LogMessage("ListCoreImpl", "deleteList", "Unable to delete list.", {
+        logger.warn("%o", new LogMessage("ListCoreImpl", "deleteList", "Unable to delete list.", {
             "listInfo": list, "error": err.message
-        }))
+        }, req))
         throw err
     }
 }
@@ -130,12 +124,12 @@ export async function validateListStatus(req, res, next) {
         if (fetchResult.status === "active") {
             logger.info("%o", new LogMessage("Validate List Status", "validateListStatus", "List active.", {
                 "listInfo": req.body.listId
-            }))
+            }, req))
             next()
         } else {
-            logger.info("%o", new LogMessage("Validate List Status", "validateListStatus", "List inactive.", {
+            logger.warn("%o", new LogMessage("Validate List Status", "validateListStatus", "List inactive.", {
                 "listInfo": req.body.listId
-            }))
+            }, req))
             return res.status(500).json({
                 message: "List not active"
             })
@@ -143,7 +137,7 @@ export async function validateListStatus(req, res, next) {
     } catch (err) {
         return res.status(500).json({
             message: "List not active"
-        })
+        }, req)
     }
 }
 

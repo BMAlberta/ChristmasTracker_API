@@ -4,7 +4,7 @@ import Joi from '@hapi/joi';
 
 
 
-async function getJoinedLists(userId) {
+async function getJoinedLists(userId, req) {
     try {
         let fetchResult = await EmbeddedListModel.aggregate([
             {
@@ -44,37 +44,38 @@ async function getJoinedLists(userId) {
             }
           ]
         )
-        logger.info("%o", new LogMessage("ListMembersImpl", "getJoinedLists", "Succesfully fetched joined lists..", {"userId": userId}))
+        logger.info("%o", new LogMessage("ListMembersImpl", "getJoinedLists", "Succesfully fetched joined lists..", {"userId": userId}, req))
         return fetchResult
     } catch (err) {
-        logger.info("%o", new LogMessage("ListMembersImpl", "getJoinedLists", "Unable to fetch joined lists for user.", {"error": err, "userId": userId}))
+        logger.warn("%o", new LogMessage("ListMembersImpl", "getJoinedLists", "Unable to fetch joined lists for user.", {"error": err, "userId": userId}, req))
         throw err
     }
 }
 
 
-async function removeUserFromList(requesterId, reqBody) {
-
+async function removeUserFromList(requesterId, req) {
+  let reqBody = req.body
     let input = memberChangeValidation(reqBody)
 
     if (input.error) {
-        throw Error('Input validation failed. ' + input.error)
+      logger.warn("%o", new LogMessage("ListDetailImpl", "removeUserFromList", "Input validation failed", {"error": input.error}, req))
+      throw Error('Input validation failed. ' + input.error)
     }
 
     try {
         let fetchResult = await EmbeddedListModel.findById(reqBody.listId)
         let listInContext = fetchResult.toObject()
         if (listInContext === null) {
-            logger.info("%o", new LogMessage("ListMembersImpl", "removeUserFromList", "Unable to retrieve list.", {
+            logger.warn("%o", new LogMessage("ListMembersImpl", "removeUserFromList", "Unable to retrieve list.", {
                 "listInfo": reqBody.listId
-            }))
+            }, req))
             throw Error('Could not retrieve list.')
         }
 
         if (requesterId !== listInContext.owner) {
-            logger.info("%o", new LogMessage("ListMembersImpl", "removeUserFromList", "Requester must be the owner.", {
+            logger.warn("%o", new LogMessage("ListMembersImpl", "removeUserFromList", "Requester must be the owner.", {
                 "listInfo": reqBody.listId, "userInfo": requesterId
-            }))
+            }, req))
             throw Error('Could not retrieve list.')
         }
 
@@ -85,36 +86,37 @@ async function removeUserFromList(requesterId, reqBody) {
         })
         logger.info("%o", new LogMessage("ListMembersImpl", "removeUserFromList", "Removed user from list.", {
             "listInfo": reqBody.listId, "userInfo": reqBody.userId
-        }))
+        }, req))
         return updatedList
 
     } catch (err) {
-        logger.info("%o", new LogMessage("ListMembersImpl", "removeUserFromList", "Unable to remove user from list.", {"error": err}))
+        logger.warn("%o", new LogMessage("ListMembersImpl", "removeUserFromList", "Unable to remove user from list.", {"error": err}, req))
         throw err
     }
 }
 
-async function removeSelfFromList(requesterId, reqBody) {
-
+async function removeSelfFromList(requesterId, req) {
+    let reqBody = req.body
     let input = unsubscribeValidation(reqBody)
     if (input.error) {
-        throw Error('Input validation failed ' + input.error)
+      logger.warn("%o", new LogMessage("ListDetailImpl", "removeSelfFromList", "Input validation failed", {"error": input.error}, req))
+      throw Error('Input validation failed. ' + input.error)
     }
 
     try {
         let fetchResult = await EmbeddedListModel.findById(reqBody.listId)
         let listInContext = fetchResult.toObject()
         if (listInContext === null) {
-            logger.info("%o", new LogMessage("ListMembersImpl", "removeSelfFromList", "Unable to retrieve list.", {
+            logger.warn("%o", new LogMessage("ListMembersImpl", "removeSelfFromList", "Unable to retrieve list.", {
                 "listInfo": reqBody.listId
-            }))
+            }, req))
             throw Error('Could not retrieve list.')
         }
 
         if (requesterId === listInContext.owner) {
-            logger.info("%o", new LogMessage("ListMembersImpl", "removeSelfFromList", "Owner cannot remove self from list.", {
+            logger.warn("%o", new LogMessage("ListMembersImpl", "removeSelfFromList", "Owner cannot remove self from list.", {
                 "listInfo": reqBody.listId, "userInfo": requesterId
-            }))
+            }, req))
             throw Error('Owner cannot remove self.')
         }
 
@@ -123,12 +125,12 @@ async function removeSelfFromList(requesterId, reqBody) {
         })
         logger.info("%o", new LogMessage("ListMembersImpl", "removeSelfFromList", "Removed user from list.", {
             "listInfo": reqBody.listId
-        }))
+        }, req))
 
         return {"status": "success"}
 
     } catch (err) {
-        logger.info("%o", new LogMessage("ListMembersImpl", "removeSelfFromList", "Unable to remove self from list.", {"error": err}))
+        logger.warn("%o", new LogMessage("ListMembersImpl", "removeSelfFromList", "Unable to remove self from list.", {"error": err}, req))
         throw err
     }
 }

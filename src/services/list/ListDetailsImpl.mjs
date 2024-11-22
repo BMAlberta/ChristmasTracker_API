@@ -7,35 +7,38 @@ import { ObjectId } from 'mongodb';
 
 
 
-async function addNewItemToList(userId, reqBody) {
+async function addNewItemToList(userId, req) {
+    let reqBody = req.body
     try {
         const fetchResult = await EmbeddedListModel.findById(reqBody.listId)
 
         let listDetail = fetchResult.toObject()
         if (listDetail != null) {
             if (userId == listDetail.owner) {
-                return addItemToOwnedList(userId, reqBody)
+                return addItemToOwnedList(userId, req)
             } 
             else if (listDetail.members.includes(userId)) {
-                return addNewItemToUnownedList(userId, reqBody)
+                return addNewItemToUnownedList(userId, req)
             }
             else {
-                logger.info("%o", new LogMessage("ListDetailImpl", "addNewItemToList", "Must either a list owner or a list member to add items.", {
+                logger.warn("%o", new LogMessage("ListDetailImpl", "addNewItemToList", "Must either a list owner or a list member to add items.", {
                     "listInfo": reqBody.listId, "userInfo": userId
-                }))
+                }, req))
                 throw Error('Must be a member.')
             }
         }
     } catch (err) {
-        logger.info("%o", new LogMessage("ListDetailImpl", "addItemToList", "Unable to add item to list.", {"error": err}))
+        logger.warn("%o", new LogMessage("ListDetailImpl", "addItemToList", "Unable to add item to list.", {"error": err}, req))
         throw err
     }
 
 }
 
-async function addItemToOwnedList(userId, reqBody) {
+async function addItemToOwnedList(userId, req) {
+    let reqBody = req.body
     let input = newItemValidation((reqBody))
     if (input.error) {
+        logger.warn("%o", new LogMessage("ListDetailImpl", "addNewItemToOwnedList", "Input validation failed", {"error": input.error}, req))
         throw Error('Input validation failed. ' + input.error)
     }
 
@@ -57,23 +60,24 @@ async function addItemToOwnedList(userId, reqBody) {
 
         logger.info("%o", new LogMessage("ListDetailImpl", "addItemToOwnedList", "Successfully added item to list", {
             "listInfo": reqBody.listId, "userInfo": userId
-        }))
+        }, req))
 
         const result = updatedList.toObject()
         sanitizeListAttributes(result, userId)
         return result
 
     } catch (err) {
-        logger.info("%o", new LogMessage("ListDetailImpl", "addItemToOwnedList", "Unable to add item to list.", {"error": err}))
+        logger.warn("%o", new LogMessage("ListDetailImpl", "addItemToOwnedList", "Unable to add item to list.", {"error": err}, req))
         throw err
     }
 }
 
-async function addNewItemToUnownedList(userId, reqBody) {
+async function addNewItemToUnownedList(userId, req) {
+    let reqBody = req.body
 
     let input = newOffListItemValidation((reqBody))
     if (input.error) {
-        logger.info("%o", new LogMessage("ListDetailImpl", "addNewItemToUnownedList", "Input validation failed", {"error": input.error}))
+        logger.warn("%o", new LogMessage("ListDetailImpl", "addNewItemToUnownedList", "Input validation failed", {"error": input.error}, req))
         throw Error('Input validation failed. ' + input.error)
     }
 
@@ -106,15 +110,15 @@ async function addNewItemToUnownedList(userId, reqBody) {
         sanitizeListAttributes(result, userId)
         logger.info("%o", new LogMessage("ListDetailImpl", "addOffListItem", "Successfully added item to list", {
             "listInfo": reqBody.listId, "userInfo": userId
-        }))
+        }, req))
         return result
     } catch (err) {
-        logger.info("%o", new LogMessage("ListDetailImpl", "addOffListItem", "Unable to add item to list.", {"error": err}))
+        logger.warn("%o", new LogMessage("ListDetailImpl", "addOffListItem", "Unable to add item to list.", {"error": err}, req))
         throw err
     }
 }
 
-async function getOverviewsForList(userId) {
+async function getOverviewsForList(userId, req) {
     try {
 
         let fetchResult = await EmbeddedListModel.aggregate([
@@ -239,17 +243,19 @@ async function getOverviewsForList(userId) {
                 }
             }
         ])
-        logger.info("%o", new LogMessage("ListDetailImpl", "getOverviewsForList", "Successfully fetched overviews.", {"userInfo": userId}))
+        logger.info("%o", new LogMessage("ListDetailImpl", "getOverviewsForList", "Successfully fetched overviews.", {"userInfo": userId}, req))
         return fetchResult
     } catch (err) {
-        logger.info("%o", new LogMessage("ListDetailImpl", "getOverviewsForList", "Unable to get overviews.", {"error": err}))
+        logger.warn("%o", new LogMessage("ListDetailImpl", "getOverviewsForList", "Unable to get overviews.", {"error": err}, req))
         throw err
     }
 }
 
-async function updateItem(userId, reqBody) {
+async function updateItem(userId, req) {
+    let reqBody = req.body
     let input = updateItemValidation((reqBody))
     if (input.error) {
+        logger.warn("%o", new LogMessage("ListDetailImpl", "updateItem", "Input validation failed", {"error": input.error}, req))
         throw Error('Input validation failed. ' + input.error)
     }
 
@@ -263,9 +269,9 @@ async function updateItem(userId, reqBody) {
             return String(obj._id) === reqBody.itemId
             })
             if (userId !== item.createdBy) {
-                logger.info("%o", new LogMessage("ListDetailImpl", "updateItem", "Only list or item owners can update an item.", {
+                logger.warn("%o", new LogMessage("ListDetailImpl", "updateItem", "Only list or item owners can update an item.", {
                     "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId
-                }))
+                }, req))
                 throw Error('Requester must be the owner/creator.')
             }
 
@@ -283,21 +289,23 @@ async function updateItem(userId, reqBody) {
             })
             logger.info("%o", new LogMessage("ListDetailImpl", "updateItem", "Successfully updated item.", {
                 "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId
-            }))
+            }, req))
             const result = updatedList.toObject()
             sanitizeListAttributes(result, userId)
             return result
         }
     } catch (err) {
-        logger.info("%o", new LogMessage("ListDetailImpl", "updateItem", "Unable to update item.", {
+        logger.warn("%o", new LogMessage("ListDetailImpl", "updateItem", "Unable to update item.", {
             "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId, "error": err
-        }))
+        }, req))
         throw err
     }
 
 }
 
-async function deleteItemFromList(listId, userId, itemId) {
+async function deleteItemFromList(req, userId) {
+    let listId = req.params.id
+    let itemId = req.query.itemId
     try {
         const fetchResult = await EmbeddedListModel.findOne({
             '_id': listId, 'items._id': itemId
@@ -307,15 +315,15 @@ async function deleteItemFromList(listId, userId, itemId) {
         let listDetail = fetchResult.toObject()
         let itemDetail = listDetail.items[0]
         if (itemDetail == null) {
-            logger.info("%o", new LogMessage("ListDetailsImpl", "deleteItemFromList", "Unable to find the item.", {
+            logger.warn("%o", new LogMessage("ListDetailsImpl", "deleteItemFromList", "Unable to find the item.", {
                 "listInfo": listId, "itemInfo": itemId, "userInfo": userId
-            }))
+            }, req))
             throw Error('Cannot find item.')
         }
         if (userId !== itemDetail.createdBy) {
-            logger.info("%o", new LogMessage("ListDetailsImpl", "deleteItemFromList", "Only item owners can delete items.", {
+            logger.warn("%o", new LogMessage("ListDetailsImpl", "deleteItemFromList", "Only item owners can delete items.", {
                 "listInfo": listId, "itemInfo": itemId, "userInfo": userId
-            }))
+            }, req))
             throw Error('Requester must be the owner.')
         }
 
@@ -327,13 +335,13 @@ async function deleteItemFromList(listId, userId, itemId) {
 
         logger.info("%o", new LogMessage("ListDetailsImpl", "deleteItemFromList", "Successfully deleted item from list.", {
             "listInfo": listId, "itemInfo": itemId, "userInfo": userId
-        }))
+        }, req))
         // return {"status": "success"}
         return updatedList
     } catch (err) {
-        logger.info("%o", new LogMessage("ListDetailsImpl", "deleteItemFromList", "Unable to delete item from list.", {
+        logger.warn("%o", new LogMessage("ListDetailsImpl", "deleteItemFromList", "Unable to delete item from list.", {
             "listInfo": listId, "itemInfo": itemId, "userInfo": userId, "error": err.message
-        }))
+        }, req))
         throw err
     }
 }

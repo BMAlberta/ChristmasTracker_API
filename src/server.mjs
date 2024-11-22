@@ -1,3 +1,4 @@
+import newrelic from 'newrelic'
 import { createSessionStore, validateAuth } from './middleware/session.mjs';
 import express from 'express';
 import createError from 'http-errors';
