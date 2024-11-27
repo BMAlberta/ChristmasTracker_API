@@ -31,6 +31,6 @@ jobs:
       with:
         push: true
         tags: |
-          docker.io/bmalberta/christmas-tracker-api:latest
-          docker.io/bmalberta/christmas-tracker-api:v${{ env.GITHUB_TAG }}
+          balberta/christmas-tracker-api:latest
+          balberta/christmas-tracker-api:v${{ env.GITHUB_TAG }}
         file: ./Dockerfile
