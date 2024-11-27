@@ -21,7 +21,7 @@ export function sanitizeListAttributes(listModel, userId) {
 
 function generatePurchaseAttributes(itemModel, userId) {
     const state = calculatePurchaseState(itemModel, userId)
-    const purchasesAllowed = calculatePurchasesAllowed(itemModel, userId)
+    const purchasesAllowed = calculatePurchasesAllowed(itemModel, userId, state)
 
     return {
         purchaseState: state.purchaseState,
@@ -31,8 +31,10 @@ function generatePurchaseAttributes(itemModel, userId) {
     }
 }
 
-function calculatePurchasesAllowed(itemModel, userId) {
-    return userId !== itemModel.createdBy
+function calculatePurchasesAllowed(itemModel, userId, state) {
+    const allowedState = (state.purchaseState === "available") || (state.purchaseState === "partial")
+    const allowedUser = userId !== itemModel.createdBy
+    return allowedState && allowedUser
 }
 
 function calculateEditAllowed(itemModel, userId) {
@@ -45,7 +47,7 @@ function calculateDeleteAllowed(itemModel, userId) {
 
 export function calculatePurchaseState(itemModel, userId) {
     
-    const PurhcaseStateEnum = Object.freeze({
+    const PurchaseStateEnum = Object.freeze({
         AVAILABLE: "available",
         PURCHASED: "purchased",
         PARTIAL: "partial",
@@ -57,7 +59,7 @@ export function calculatePurchaseState(itemModel, userId) {
     if (purchaseInfo == null) {
         return {
             retractablePurchase: false,
-            purchaseState: PurhcaseStateEnum.AVAILABLE,
+            purchaseState: PurchaseStateEnum.AVAILABLE,
             quantityPurchased: 0,
         }
     }
@@ -65,7 +67,7 @@ export function calculatePurchaseState(itemModel, userId) {
     if (purchaseInfo.purchasers.length == 0) {
         return {
             retractablePurchase: false,
-            purchaseState: PurhcaseStateEnum.AVAILABLE,
+            purchaseState: PurchaseStateEnum.AVAILABLE,
             quantityPurchased: 0,
         }
     }
@@ -79,7 +81,7 @@ export function calculatePurchaseState(itemModel, userId) {
         if (!maxPurchasesReached && !userIsPurchaser) {
             return {
                 retractablePurchase: false,
-                purchaseState: PurhcaseStateEnum.PARTIAL,
+                purchaseState: PurchaseStateEnum.PARTIAL,
                 quantityPurchased: totalPurchases,
             }
         }
@@ -87,7 +89,7 @@ export function calculatePurchaseState(itemModel, userId) {
         if (!maxPurchasesReached && userIsPurchaser) {
             return {
                 retractablePurchase: true,
-                purchaseState: PurhcaseStateEnum.PARTIAL,
+                purchaseState: PurchaseStateEnum.PARTIAL,
                 quantityPurchased: totalPurchases,
             }
         }
@@ -95,7 +97,7 @@ export function calculatePurchaseState(itemModel, userId) {
         if (userIsPurchaser && maxPurchasesReached) {
             return {
                 retractablePurchase: true,
-                purchaseState: PurhcaseStateEnum.PURCHASED,
+                purchaseState: PurchaseStateEnum.PURCHASED,
                 quantityPurchased: totalPurchases
             }
         }
@@ -103,14 +105,14 @@ export function calculatePurchaseState(itemModel, userId) {
         if (maxPurchasesReached) {
             return {
                 retractablePurchase: false,
-                purchaseState: PurhcaseStateEnum.UNAVAILABLE,
+                purchaseState: PurchaseStateEnum.UNAVAILABLE,
                 quantityPurchased: totalPurchases,
             }
         }
     }
     return {
         retractablePurchase: false,
-        purchaseState: PurhcaseStateEnum.UNAVAILABLE,
+        purchaseState: PurchaseStateEnum.UNAVAILABLE,
         quantityPurchased: 0,
     }
 }
