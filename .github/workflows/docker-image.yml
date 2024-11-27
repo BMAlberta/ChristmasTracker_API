@@ -1,0 +1,36 @@
+name: Docker Build and Push
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - 
+      name: Checkout
+      uses: actions/checkout@v4
+
+    - 
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        platforms: linux/amd64,linux/arm64,linux/arm64/v8
+
+    - 
+      name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - 
+      name: Build and push
+      uses: docker/build-push-action@v6
+      with:
+        push: true
+        tags: |
+          bmalberta/christmas-tracker-api:latest
+          bmalberta/christmas-tracker-api:v${{ env.GITHUB_TAG }}
+        file: ./Dockerfile
