@@ -5,7 +5,7 @@ on:
     types: [published]
 
 jobs:
-  build:
+  dockerBuild:
     runs-on: ubuntu-latest
     steps:
     - 
@@ -31,6 +31,6 @@ jobs:
       with:
         push: true
         tags: |
-          bmalberta/christmas-tracker-api:latest
-          bmalberta/christmas-tracker-api:v${{ env.GITHUB_TAG }}
+          docker.io/bmalberta/christmas-tracker-api:latest
+          docker.io/bmalberta/christmas-tracker-api:v${{ env.GITHUB_TAG }}
         file: ./Dockerfile
