@@ -29,8 +29,9 @@ jobs:
       name: Build and push
       uses: docker/build-push-action@v6
       with:
+        platforms: linux/amd64,linux/arm64,linux/arm64/v8
         push: true
         tags: |
           balberta/christmas-tracker-api:latest
-          balberta/christmas-tracker-api:v${{ env.GITHUB_TAG }}
+          balberta/christmas-tracker-api:v${{ github.ref_name }}
         file: ./Dockerfile
