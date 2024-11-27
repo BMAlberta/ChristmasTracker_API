@@ -13,3 +13,4 @@ docker-compose.yml
 .env*
 env.*
 config/.env.production
+src/newrelic_agent.log
