@@ -5,7 +5,7 @@ export const ProcedureType = Object.freeze({
     JOINED_LISTS: "getJoinedLists",
     LOGIN_INFO: "CALL tracker.getLoginInfo(?)",
     MEMBER_LIST_OVERVIEWS: "getMemberListsOverviews",
-    PURCHASE_SUMMARY_BY_LIST: "getPurchaseSummaryByListForUser",
+    PURCHASE_SUMMARY_BY_LIST: "CALL tracker.getPurchaseSummaryByListForUser(?)",
     USER_DETAILS: "CALL tracker.getUserDetails(?)",
     USER_ID: "getUserId",
     UPDATE_USER_RETURN_INFO: "updateAndReturnUserInfo",
