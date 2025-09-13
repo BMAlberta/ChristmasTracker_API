@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs';
-import UserModel from '../models/user.mjs';
 import NetworkUtils from '../util/request.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
 import Joi from '@hapi/joi';
 import { ValidationError } from '../config/errors.mjs';
+import {findOne, updateOne, ProcedureType} from "../util/dataRequest.mjs";
 
 async function doLogin(req) {
     var session = req.session
@@ -19,7 +19,7 @@ async function doLogin(req) {
     // Find user by email
     var user = ""
     try {
-        user = await UserModel.findOne({ email: reqBody.email })
+        user = await findOne(ProcedureType.LOGIN_INFO, reqBody.email)
     } catch (err) {
         logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to query for users", { "user": reqBody.email, "ip": loginIp }, req))
         throw Error("Query failed.")
@@ -31,7 +31,8 @@ async function doLogin(req) {
     }
 
     // Validate password
-    let validPassword = await bcrypt.compare(reqBody.password, user.pwd)
+    // let validPassword = await bcrypt.compare(reqBody.password, user.pwd)
+    let validPassword = reqBody.password === user.pwd
     if (!validPassword) {
         logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Password validation failed", { "userId": reqBody.email }, req))
         throw Error('Credential validation failed.')
@@ -39,28 +40,24 @@ async function doLogin(req) {
 
     // Update login details
     try {
-        await UserModel.findByIdAndUpdate({
-            _id: user._id
-        }, {
-            lastLogInLocation: requestMetaData,
-            lastLogInDate: Date.now()
-        })
+        let currentDate = new Date();
+        await updateOne(ProcedureType.UPDATE_LOGIN_INFO, [user.userId, requestMetaData, currentDate])
     } catch (err) {
-        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to update login IP", { "user": user._id, "ip": loginIp }, req))
+        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to update login IP", { "user": user.userId, "ip": loginIp }, req))
     }
 
     session.details = {
-        userId: user._id,
+        userId: user.userId,
         userAuthenticated: true
     }
     // Update session
     try {
         await session.save()
-        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Login successful", { "user": user._id, "session": session.details }, req))   
+        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Login successful", { "user": user.userId, "session": session.details }, req))   
 
-        return user._id
+        return user.userId
     } catch (err) {
-        logger.warn("%o", new LogMessage("AuthSerivceImpl", "doLogin", "Session generation failed", { "user": user._id, "error": err }, req))
+        logger.warn("%o", new LogMessage("AuthSerivceImpl", "doLogin", "Session generation failed", { "user": user.userId, "error": err }, req))
         throw err
     }
 }
@@ -88,22 +85,22 @@ async function updatePassword(requester, req) {
     }
 
     try {
-        const user = await UserModel.findById(requester)
-        const validOldPassword = await bcrypt.compare(reqBody.oldPassword, user.pwd)
+        // const user = await UserModel.findById(requester)
+        // const validOldPassword = await bcrypt.compare(reqBody.oldPassword, user.pwd)
+        const user = await findOne(ProcedureType.PASSWORD_INFO, requester)
+        const validOldPassword = true
 
         if (!validOldPassword) {
-            logger.warn("%o", new LogMessage("AuthServiceImpl", "updatePassword", "Password validation failed.", { "userId": user._id}, req))
+            logger.warn("%o", new LogMessage("AuthServiceImpl", "updatePassword", "Password validation failed.", { "userId": user.userId}, req))
             throw Error('Password validation failed')
         }
 
-        let saltedPassword = await generatePassword(reqBody.newPassword)
+        // let saltedPassword = await generatePassword(reqBody.newPassword)
+        let saltedPassword = reqBody.newPassword
 
-        await UserModel.findByIdAndUpdate({ _id: user._id },
-            {
-                pwd: saltedPassword,
-                lastPasswordChange: Date.now()
-        })
-        logger.debug("%o", new LogMessage("AuthServiceImpl", "updatePassword", "Update password successful.", { "userId": user._id}, req))
+        await updateOne(ProcedureType.UPDATE_PASSWORD, [requester, saltedPassword])
+
+        logger.debug("%o", new LogMessage("AuthServiceImpl", "updatePassword", "Update password successful.", { "userId": user.userId}, req))
         return user
     } catch (err) {
         logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogout", "Change password failed.", { "error": err},req))

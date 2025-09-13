@@ -96,7 +96,7 @@ router.post("/logout", async (req, res) => {
 router.post("/password/update", util.getUser, async (req, res) => {
     try {
         const result = await AuthServiceImpl.updatePassword(res.userId, req)
-        res.json(new DataResponse({"userId": result._id}))
+        res.json(new DataResponse({"userId": result.userId}))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }
