@@ -2,9 +2,9 @@ import bcrypt from 'bcryptjs';
 import security from '../config/crypto.mjs';
 import otpGenerator from 'otp-generator';
 import OTPModel from '../models/otp.mjs';
-import UserModel from '../models/user.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
 import Joi from '@hapi/joi';
+import {findOne, createOne, ProcedureType} from "../util/dataRequest.mjs";
 
 
 // Error Code Root: 100
@@ -169,7 +169,7 @@ async function createUser(user) {
         logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "createUser", "100.6.1: Input validation failed.", {
             "error": input.error
         }))
-        throw Error("100.5.4")
+        throw Error("100.6.1")
     }
 
     var saltedPassword = ""
@@ -177,15 +177,14 @@ async function createUser(user) {
         const salt = await bcrypt.genSalt(10)
         saltedPassword = await bcrypt.hash(user.password, salt)
 
-        const newUser = new UserModel({
-            email: user.email, firstName: user.firstName, lastName: user.lastName, pwd: saltedPassword
-        })
+        let userData = [user.firstName, user.lastName, user.email, saltedPassword]
 
-        const saveResult = await newUser.save()
+        const saveResult = await createOne(ProcedureType.CREATE_USER, userData)
+
         logger.info("%o", new LogMessage("EnrollmentServiceImpl", "createUser", "User successfully created.", {
-            "userId": saveResult._id
+            "userId": saveResult.userId
         }))
-        return saveResult._id
+        return saveResult.userId
     } catch (err) {
         logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "createUser", "Failed to save user.", {
             "error": err.message
@@ -196,10 +195,7 @@ async function createUser(user) {
 
 // Error Sub Code: 7
 async function isEmailRegistered(emailAddress) {
-    try {
-        const fetchResult = await UserModel.findOne({
-            email: emailAddress
-        })
+    try {const fetchResult = await findOne(ProcedureType.CHECK_USER, [emailAddress])
 
         if (fetchResult) {
             logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "isEmailRegistered", "Email already exists.", {
