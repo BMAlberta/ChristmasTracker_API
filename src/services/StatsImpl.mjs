@@ -20,7 +20,7 @@ async function getPurchaseOverviewsNew(userId) {
         logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Successfully calculated spending overviews.", {"userInfo": userId}))
         return fetchResult
     } catch (err) {
-        logger.warn("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Unable calcuate spending overviews", {"error": err}))
+        logger.warn("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Unable calculate spending overviews", {"error": err}))
         throw err
     }
 }

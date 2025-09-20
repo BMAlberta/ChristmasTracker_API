@@ -2,9 +2,9 @@
  * Sanitizes and enhances the item model provided to include more UI friendly "privileges".
  *
  * @export
- * @param {EmbeddedItemModel} itemModel - The raw ItemModel.
+ * @param itemModel - The raw ItemModel.
  * @param {string} userId - The user ID of the logged in/requesting user.
- * @param {EmbeddedListModel} listModel - The raw ListModel.
+ * @param listModel - The raw ListModel.
  */
 export function sanitizeItemAttributes(itemModel, userId, listModel) {
     const purchaseAttributes = generatePurchaseAttributes(itemModel, userId)
@@ -23,7 +23,7 @@ export function sanitizeItemAttributes(itemModel, userId, listModel) {
  * Sanitizes and enhances the list model provided to include more UI friendly "privileges".
  *
  * @export
- * @param {EmbeddedItemModel} itemModel - The raw ItemModel.
+ * @param itemModel - The raw ItemModel.
  * @param {string} userId - The user ID of the logged in/requesting user.
  */
 export function sanitizeListAttributes(listModel, userId) {
@@ -134,7 +134,8 @@ export function calculatePurchaseState(itemModel, userId) {
         }
     }
 
-    if (purchaseInfo.purchasers.length == 0) {
+    let purchaseInfoToCheck = purchaseInfo
+    if (purchaseInfoToCheck.length === 0) {
         return {
             retractablePurchase: false,
             purchaseState: PurchaseStateEnum.AVAILABLE,
@@ -142,10 +143,10 @@ export function calculatePurchaseState(itemModel, userId) {
         }
     }
 
-    if (purchaseInfo.purchasers.length > 0) {
+    if (purchaseInfoToCheck.length > 0) {
 
-        const userIsPurchaser = purchaseInfo.purchasers.some((obj) => obj.purchaserId === userId);
-        var totalPurchases = purchaseInfo.purchasers.reduce((n, {quantityPurchased}) => n + quantityPurchased, 0)
+        const userIsPurchaser = purchaseInfoToCheck.some((obj) => obj.purchaser === userId);
+        const totalPurchases = purchaseInfoToCheck.reduce((n, {quantityPurchased}) => n + quantityPurchased, 0);
         const maxPurchasesReached = totalPurchases >= itemModel.quantity
 
         if (!maxPurchasesReached && !userIsPurchaser) {

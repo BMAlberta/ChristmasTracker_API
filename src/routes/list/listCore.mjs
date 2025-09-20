@@ -11,7 +11,7 @@ router.get("/owned/", util.getUser, async (req, res) => {
         const ownedLists = await CoreImpl.getOwnedLists(res.userId, req)
         res.json(new DataResponse({ownedLists}));
     } catch (err) {
-        res.status(501).json(new ErrorResponse(err.message));
+        res.status(500).json(new ErrorResponse(err.message));
     }
 })
 
@@ -26,7 +26,7 @@ router.get("/:id", util.getUser, async (req, res) => {
 
 router.get("/owner/:id", util.getUser, async (req, res) => {
     try {
-        const ownedLists = await CoreImpl.getOwnedLists(req)
+        const ownedLists = await CoreImpl.getOwnedLists(req.params.id)
         res.json(new DataResponse({ownedLists}));
     } catch (err) {
         res.status(501).json(new ErrorResponse(err.message));
