@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs';
 import security from '../config/crypto.mjs';
 import otpGenerator from 'otp-generator';
-import OTPModel from '../models/otp.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
 import Joi from '@hapi/joi';
 import {findOne, createOne, ProcedureType} from "../util/dataRequest.mjs";
@@ -27,7 +26,7 @@ async function enrollUser(req) {
 
     try {
         //Save details to session
-        saveEnrollmentSession(session, reqBody)
+        await saveEnrollmentSession(session, reqBody)
         //Generate OTP code
         const otpCode = generateOTPCodeForEnrollment(reqBody.email)
         //Return OTP
@@ -172,7 +171,7 @@ async function createUser(user) {
         throw Error("100.6.1")
     }
 
-    var saltedPassword = ""
+    let saltedPassword = "";
     try {
         const salt = await bcrypt.genSalt(10)
         saltedPassword = await bcrypt.hash(user.password, salt)
@@ -235,23 +234,23 @@ async function generateOTPCodeForEnrollment(emailAddress) {
         upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false
     })
 
-    const generatationDate = new Date()
-    const expirationDate = AddMinutesToDate(generatationDate, 10)
+    const generationDate = new Date()
+    const expirationDate = AddMinutesToDate(generationDate, 10)
 
-    const otpModel = new OTPModel({
-        otpCode: otpCode, expirationDate: expirationDate, createDate: generatationDate
-    })
+    // const otpModel = new OTPModel({
+    //     otpCode: otpCode, expirationDate: expirationDate, createDate: generationDate
+    // })
 
     try {
-        const otpEntry = await otpModel.save()
-
-        var details = {
-            "timestamp": generatationDate,
+        // const otpEntry = await otpModel.save()
+        const otpEntry = null
+        let details = {
+            "timestamp": generationDate,
             "check": emailAddress,
             "success": true,
             "message": "OTP sent to user",
             "otp_id": otpEntry._id
-        }
+        };
         const flattenedModel = JSON.stringify(details)
         const encodedOTPModel = security.encrypt(flattenedModel)
 
@@ -269,8 +268,9 @@ async function generateOTPCodeForEnrollment(emailAddress) {
 // Error Sub Code: 10
 async function validateOTP(details, verificationInfo) {
     try {
-        let storedOTP = await OTPModel.findById(verificationInfo.otp_id)
+        // let storedOTP = await OTPModel.findById(verificationInfo.otp_id)
 
+        let storedOTP = null
         const otpMismatch = details.otp !== storedOTP.otpCode
         if (otpMismatch) {
             logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "validateOTP", "OTP codes do not match", {
@@ -291,11 +291,11 @@ async function validateOTP(details, verificationInfo) {
             throw Error('OTP already used.')
         }
 
-        await OTPModel.findByIdAndUpdate({
-            _id: storedOTP._id
-        }, {
-            verified: true, lastUpdateDate: Date.now()
-        })
+        // await OTPModel.findByIdAndUpdate({
+        //     _id: storedOTP._id
+        // }, {
+        //     verified: true, lastUpdateDate: Date.now()
+        // })
 
         logger.info("%o", new LogMessage("EnrollmentServiceImpl", "validateOTP", "OTP validated."))
 

@@ -1,19 +1,7 @@
-import mongoose from "mongoose";
 import { logger, LogMessage } from "./winston.mjs";
 import mariadb from "mariadb";
 
-function generateConntectionOptions_legacy() {
-  
-  const connOptions =
-  {
-    user: process.env.MONGO_INITDB_ROOT_USERNAME,
-    pass: process.env.MONGO_INITDB_ROOT_PASSWORD,
-    dbName: process.env.DATABASE_ACTIVE_DB,
-  };
-    return connOptions
-}
-
-function generateConntectionOptions() {
+function generateConnectionOptions() {
 
   const connOptions =
       {
@@ -38,31 +26,9 @@ function generateConntectionOptions() {
   return options
 }
 
-
-export async function getDbConnection_legacy() {
-  var connectionString = process.env.DATABASE_CONNECTION_STRING;
-  var connectionOptions = generateConntectionOptions_legacy();
-  
-  try {
-    await mongoose.connect(connectionString, connectionOptions);
-    const db = mongoose.connection
-    logger.info(
-      "%o",
-      new LogMessage("DB", "Connect", "DB authenticated and connected."))
-      return db
-  } catch (err) {
-    logger.warn(
-      "%o",
-      new LogMessage("DB", "Connect", {"error": err})
-    )
-    throw Error("DB Connection Failed.")
-  }
-}
-
-
 export async function getDbConnection() {
   try {
-    const pool = await mariadb.createPool(generateConntectionOptions());
+    const pool = await mariadb.createPool(generateConnectionOptions());
     let connection = await pool.getConnection();
     logger.info(
         "%o",

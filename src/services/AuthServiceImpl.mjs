@@ -2,11 +2,10 @@ import bcrypt from 'bcryptjs';
 import NetworkUtils from '../util/request.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
 import Joi from '@hapi/joi';
-import { ValidationError } from '../config/errors.mjs';
 import {findOne, updateOne, ProcedureType} from "../util/dataRequest.mjs";
 
 async function doLogin(req) {
-    var session = req.session
+    const session = req.session;
     let reqBody = req.body
     let requestMetaData = NetworkUtils.getCallerIP(req)
     let input = loginValidation(reqBody)
@@ -17,7 +16,7 @@ async function doLogin(req) {
     }
 
     // Find user by email
-    var user = ""
+    let user = "";
     try {
         user = await findOne(ProcedureType.LOGIN_INFO, reqBody.email)
     } catch (err) {
@@ -57,7 +56,7 @@ async function doLogin(req) {
 
         return user.userId
     } catch (err) {
-        logger.warn("%o", new LogMessage("AuthSerivceImpl", "doLogin", "Session generation failed", { "user": user.userId, "error": err }, req))
+        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Session generation failed", { "user": user.userId, "error": err }, req))
         throw err
     }
 }

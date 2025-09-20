@@ -1,4 +1,4 @@
-import newrelic from 'newrelic'
+// import newrelic from 'newrelic'
 import { createSessionStore, validateAuth } from './middleware/session.mjs';
 import express from 'express';
 import createError from 'http-errors';
@@ -28,7 +28,7 @@ export async function startServer() {
     const app = express()
 
     app.use(cors());
-    var sessionStore = await createSessionStore()
+    const sessionStore = await createSessionStore();
     app.use(sessionStore)
     
     app.use(express.urlencoded({extended: true})); 
@@ -97,9 +97,9 @@ export async function startServer() {
     });
 
     app.listen(3000)
-    var logInfo = new LogMessage("Server", "Startup", "Application is running.", {
+    const logInfo = new LogMessage("Server", "Startup", "Application is running.", {
         "port": process.env.API_PORT,
-    })
+    });
     logger.info("%o", logInfo)
 
 }

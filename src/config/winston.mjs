@@ -5,7 +5,7 @@ const { combine, timestamp, printf, splat } = winston.format;
 
 
 // define the custom settings for each transport (file, console)
-var options = {
+const options = {
   file: {
     level: 'debug',
     filename: `${appRoot}/logs/app.log`,
@@ -24,8 +24,8 @@ var options = {
 };
 
 const myFormat = printf(info => {
-    // you can get splat attribue here as info[Symbol.for("splat")]
-    // if you custome splat please rem splat() into createLogger()
+    // you can get splat attribute here as info[Symbol.for("splat")]
+    // if you custom splat please rem splat() into createLogger()
 
     return `{ timestamp: ${info.timestamp}, level: ${info.level.toUpperCase()}, data: ${JSON.stringify(formatMeta(info))}}`;
 });
@@ -92,18 +92,18 @@ export function LogMessage(process, event, message, details, req) {
     return generateLogMessage(this)
 }
 
-function generateLogMessage(rawLog) {  
-  var metadata
+function generateLogMessage(rawLog) {
+  let metadata;
   if (rawLog.req != null) {
     metadata = generateLogMetadataData(rawLog.req)
   }
 
-  var data = {
+  const data = {
     process: rawLog.process,
     event: rawLog.event,
     message: rawLog.message,
     details: rawLog.details
-  }
+  };
 
   let log = {
     metadata: metadata,
@@ -120,11 +120,11 @@ function generateLogMetadataData(req) {
     os: req.headers.os ?? "NOP" 
   }
 
-  var log = {
-      channel: req.headers.channel ?? "NCP",
-      agent : agent,
-      sessionId: req.session?.id ?? "NSP"
-  }
+  const log = {
+    channel: req.headers.channel ?? "NCP",
+    agent: agent,
+    sessionId: req.session?.id ?? "NSP"
+  };
   return log
 }
 

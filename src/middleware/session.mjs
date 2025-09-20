@@ -1,23 +1,22 @@
 import sessionManager from 'express-session';
-import { getDbConnection, getDbConnection_legacy } from '../config/db.mjs';
+import { getDbConnection} from '../config/db.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
 import MemcachedStoreFactory from 'connect-memjs';
 
 export async function createSessionStore() {
 
 	try {
-		var dbConnection = await getDbConnection_legacy()
-		var dbConnectionv1 = await getDbConnection()
+		const dbConnection = await getDbConnection();
 	} catch (err) {
 		throw Error("Unable to get a connection")
 	}
 	const MemcachedStore = MemcachedStoreFactory(sessionManager);
-	var store = new MemcachedStore({
+	let store = new MemcachedStore({
 		servers: [process.env.MEMCACHE_SERVER], // Array of Memcached server addresses
 		prefix: '_session_' // Optional prefix for session keys in Memcached
 	});
 
-	var sessionStore = sessionManager({
+	let sessionStore = sessionManager({
 		secret: process.env.SESSION_SECRET,
 		cookie: {
 			maxAge: 1800000
