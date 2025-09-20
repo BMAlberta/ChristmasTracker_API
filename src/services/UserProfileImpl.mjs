@@ -1,19 +1,11 @@
-import UserModel from '../models/user.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
 import Joi from '@hapi/joi';
+import {findOne, updateOne, deleteOne, ProcedureType} from "../util/dataRequest.mjs";
 
 async function getUserOverview(req) {
     let userId = req.params.id
     try {
-        const fetchResult = await UserModel.findById(userId, {
-            'email': 1,
-            'firstName': 1,
-            'lastName': 1,
-            'creationDate': 1,
-            'lastLogInDate': 1,
-            'lastLogInLocation': 1,
-            'lastPasswordChange': 1,
-        })
+        const fetchResult = await findOne(ProcedureType.USER_DETAILS, [userId]);
         logger.info("%o", new LogMessage("UserProfileImpl", "getUserOverview", "Successfully retrieved user."))
         return fetchResult
     } catch (err) {
@@ -37,11 +29,9 @@ async function updateUser(requesterId, req) {
     }
 
     try {
-        let updatedUser = await UserModel.findByIdAndUpdate(reqBody.userId, {
-            firstName: reqBody.firstName, lastName: reqBody.lastName, email: reqBody.email
-        }, {
-            new: true
-        })
+        let userData = [reqBody.userId, reqBody.firstName, reqBody.lastName, reqBody.email]
+        let updatedUser = await updateOne(ProcedureType.UPDATE_USER_RETURN_INFO, userData);
+
         logger.info("%o", new LogMessage("UserProfileImpl", "updateUser", "Successfully updated user info.", {"userInfo": reqBody.userId}, req))
         return updatedUser
     } catch (err) {
@@ -56,7 +46,7 @@ async function deleteUser(requesterId, userId) {
         throw Error('User must delete their own account.')
     }
     try {
-        await UserModel.findByIdAndDelete(userId)
+        await deleteOne(ProcedureType.DELETE_USER, [userId])
         logger.info("%o", new LogMessage("UserProfileImpl", "deleteUser", "Successfully deleted user", {"userInfo": userId}, req))
 
     } catch (err) {

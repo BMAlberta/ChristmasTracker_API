@@ -7,7 +7,6 @@ import util from '../middleware/session.mjs';
 
 router.get("/:id", async (req, res) => {
     try {
-
         const user = await UserProfileServiceImpl.getUserOverview(req)
         res.json(new DataResponse({ user }))
     } catch (err) {

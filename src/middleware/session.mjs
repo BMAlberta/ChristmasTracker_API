@@ -1,21 +1,22 @@
 import sessionManager from 'express-session';
-import MongoStore from 'connect-mongo'
-import { getDbConnection } from '../config/db.mjs';
+import { getDbConnection} from '../config/db.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
+import MemcachedStoreFactory from 'connect-memjs';
 
 export async function createSessionStore() {
 
 	try {
-		var dbConnection = await getDbConnection()
+		const dbConnection = await getDbConnection();
 	} catch (err) {
 		throw Error("Unable to get a connection")
 	}
-	
-	var client = dbConnection.getClient()
-	var store = MongoStore.create(
-		{client: client});
-	
-	var sessionStore = sessionManager({
+	const MemcachedStore = MemcachedStoreFactory(sessionManager);
+	let store = new MemcachedStore({
+		servers: [process.env.MEMCACHE_SERVER], // Array of Memcached server addresses
+		prefix: '_session_' // Optional prefix for session keys in Memcached
+	});
+
+	let sessionStore = sessionManager({
 		secret: process.env.SESSION_SECRET,
 		cookie: {
 			maxAge: 1800000

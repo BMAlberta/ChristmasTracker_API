@@ -1,50 +1,50 @@
 import { logger, LogMessage } from '../../config/winston.mjs';
-import { EmbeddedListModel } from '../../models/embeddedList.mjs';
 import Joi from '@hapi/joi';
 
 
 
 async function getJoinedLists(userId, req) {
     try {
-        let fetchResult = await EmbeddedListModel.aggregate([
-            {
-              '$match': {
-                '$and': [
-                  {
-                    'members': {
-                      '$in': [
-                        userId
-                      ]
-                    }
-                  }, {
-                    'owner': {
-                      '$ne': userId
-                    }
-                  }, {
-                    'status': {
-                      '$eq': 'active'
-                    }
-                  }
-                ]
-              }
-            }, {
-              '$addFields': {
-                'convertedMemberId': {
-                  '$toObjectId': '$_id'
-                }
-              }
-            }, {
-              '$project': {
-                '_id': 0, 
-                'listName': '$name', 
-                'listId': {
-                  '$toString': '$_id'
-                }
-              }
-            }
-          ]
-        )
-        logger.info("%o", new LogMessage("ListMembersImpl", "getJoinedLists", "Succesfully fetched joined lists..", {"userId": userId}, req))
+        // let fetchResult = await EmbeddedListModel.aggregate([
+        //     {
+        //       '$match': {
+        //         '$and': [
+        //           {
+        //             'members': {
+        //               '$in': [
+        //                 userId
+        //               ]
+        //             }
+        //           }, {
+        //             'owner': {
+        //               '$ne': userId
+        //             }
+        //           }, {
+        //             'status': {
+        //               '$eq': 'active'
+        //             }
+        //           }
+        //         ]
+        //       }
+        //     }, {
+        //       '$addFields': {
+        //         'convertedMemberId': {
+        //           '$toObjectId': '$_id'
+        //         }
+        //       }
+        //     }, {
+        //       '$project': {
+        //         '_id': 0,
+        //         'listName': '$name',
+        //         'listId': {
+        //           '$toString': '$_id'
+        //         }
+        //       }
+        //     }
+        //   ]
+        // )
+        let fetchResult = null
+        logger.info("%o", new LogMessage("ListMembersImpl", "getJoinedLists", "Successfully fetched joined lists..", {"userId": userId}, req))
         return fetchResult
     } catch (err) {
         logger.warn("%o", new LogMessage("ListMembersImpl", "getJoinedLists", "Unable to fetch joined lists for user.", {"error": err, "userId": userId}, req))
@@ -63,8 +63,8 @@ async function removeUserFromList(requesterId, req) {
     }
 
     try {
-        let fetchResult = await EmbeddedListModel.findById(reqBody.listId)
-        let listInContext = fetchResult.toObject()
+        // let fetchResult = await EmbeddedListModel.findById(reqBody.listId)
+        let listInContext = null
         if (listInContext === null) {
             logger.warn("%o", new LogMessage("ListMembersImpl", "removeUserFromList", "Unable to retrieve list.", {
                 "listInfo": reqBody.listId
@@ -79,11 +79,12 @@ async function removeUserFromList(requesterId, req) {
             throw Error('Could not retrieve list.')
         }
 
-        let updatedList = await EmbeddedListModel.findByIdAndUpdate(reqBody.listId, {
-            $pull: {members: reqBody.userId}, lastUpdateDate: Date.now()
-        }, {
-            new: true
-        })
+        // let updatedList = await EmbeddedListModel.findByIdAndUpdate(reqBody.listId, {
+        //     $pull: {members: reqBody.userId}, lastUpdateDate: Date.now()
+        // }, {
+        //     new: true
+        // })
+        let updatedList = null
         logger.info("%o", new LogMessage("ListMembersImpl", "removeUserFromList", "Removed user from list.", {
             "listInfo": reqBody.listId, "userInfo": reqBody.userId
         }, req))
@@ -104,8 +105,8 @@ async function removeSelfFromList(requesterId, req) {
     }
 
     try {
-        let fetchResult = await EmbeddedListModel.findById(reqBody.listId)
-        let listInContext = fetchResult.toObject()
+        // let fetchResult = await EmbeddedListModel.findById(reqBody.listId)
+        let listInContext = null
         if (listInContext === null) {
             logger.warn("%o", new LogMessage("ListMembersImpl", "removeSelfFromList", "Unable to retrieve list.", {
                 "listInfo": reqBody.listId
@@ -120,9 +121,9 @@ async function removeSelfFromList(requesterId, req) {
             throw Error('Owner cannot remove self.')
         }
 
-        await EmbeddedListModel.findByIdAndUpdate(reqBody.listId, {
-            $pull: {members: requesterId}, lastUpdateDatae: Date.now()
-        })
+        // await EmbeddedListModel.findByIdAndUpdate(reqBody.listId, {
+        //     $pull: {members: requesterId}, lastUpdateDate: Date.now()
+        // })
         logger.info("%o", new LogMessage("ListMembersImpl", "removeSelfFromList", "Removed user from list.", {
             "listInfo": reqBody.listId
         }, req))
