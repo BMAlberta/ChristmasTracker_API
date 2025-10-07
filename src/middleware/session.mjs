@@ -5,11 +5,11 @@ import MemcachedStoreFactory from 'connect-memjs';
 
 export async function createSessionStore() {
 
-	try {
-		const dbConnection = await getDbConnection();
-	} catch (err) {
-		throw Error("Unable to get a connection")
-	}
+	// try {
+	// 	const dbConnection = await getDbConnection();
+	// } catch (err) {
+	// 	throw Error("Unable to get a connection")
+	// }
 	const MemcachedStore = MemcachedStoreFactory(sessionManager);
 	let store = new MemcachedStore({
 		servers: [process.env.MEMCACHE_SERVER], // Array of Memcached server addresses

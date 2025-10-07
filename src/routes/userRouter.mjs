@@ -3,11 +3,12 @@ const router = express.Router()
 import { DataResponse, ErrorResponse } from '../models/payload.mjs';
 import UserProfileServiceImpl from '../services/UserProfileImpl.mjs';
 import util from '../middleware/session.mjs';
+// import {params} from "newrelic/lib/shim/specs/index.js";
 
 
 router.get("/:id", async (req, res) => {
     try {
-        const user = await UserProfileServiceImpl.getUserOverview(req)
+        const user = await UserProfileServiceImpl.getUserOverview(req.params.id, req)
         res.json(new DataResponse({ user }))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));

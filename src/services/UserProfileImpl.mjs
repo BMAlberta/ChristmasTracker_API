@@ -2,8 +2,7 @@ import { logger, LogMessage } from '../config/winston.mjs';
 import Joi from '@hapi/joi';
 import {findOne, updateOne, deleteOne, ProcedureType} from "../util/dataRequest.mjs";
 
-async function getUserOverview(req) {
-    let userId = req.params.id
+async function getUserOverview(userId, req) {
     try {
         const fetchResult = await findOne(ProcedureType.USER_DETAILS, [userId]);
         logger.info("%o", new LogMessage("UserProfileImpl", "getUserOverview", "Successfully retrieved user."))

@@ -15,6 +15,7 @@ import listDetailRouter from './routes/list/listDetails.mjs';
 import listInviteRouter from './routes/list/listInvite.mjs';
 import listMemberRouter from './routes/list/listMembers.mjs';
 import statsRouter from './routes/statsRouter.mjs';
+import overviewRouter from './routes/overviewRouter.mjs';
 import swaggerUi from 'swagger-ui-express'
 // import openapiSpecification from './swagger.mjs'
 
@@ -65,6 +66,7 @@ export async function startServer() {
     app.use('/' + process.env.BASE_API_BATH + '/lists/details', validateAuth, listDetailRouter)
     app.use('/' + process.env.BASE_API_BATH + '/lists/members/invite', validateAuth, listInviteRouter)
     app.use('/' + process.env.BASE_API_BATH + '/lists/members', validateAuth, listMemberRouter)
+    app.use('/' + process.env.BASE_API_BATH + '/overview', validateAuth, overviewRouter)
     
     
     // simple route

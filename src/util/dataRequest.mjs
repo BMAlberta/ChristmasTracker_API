@@ -33,12 +33,15 @@ export const ProcedureType = Object.freeze({
 });
 
 export async function makeFormattedDataRequest(procedureName, data) {
+    let connection;
     try {
-        let connection = await getDbConnection();
+        connection = await getDbConnection();
         let result = await connection.query(procedureName, data);
         return result[0];
     } catch (err) {
         console.log(err)
+    } finally {
+        if (connection) await connection.end()
     }
 }
 
@@ -69,6 +72,11 @@ export async function findMany(procedureName, data) {
 export async function updateOne(procedureName, data) {
     try {
         const result = await makeFormattedDataRequest(procedureName, data);
+
+        if (result.length === 0) {
+            throw Error('No result found.');
+        }
+
         return result.length === 0 ? null : result[0];
     } catch (err) {
         console.log(err)
