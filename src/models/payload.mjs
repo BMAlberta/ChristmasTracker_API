@@ -1,13 +1,13 @@
 export class Response {
-	constructor(error = null, payload) {
+	constructor(error = null, code = null, payload) {
 		if (error != null) {
 			this.error = {
-				message: error
+				message: error,
+                code:  code
 			}
 		} else {
 			this.error = {}
 		}
-
 		if (payload != null) {
 			this.payload = payload
 		} else {
@@ -19,16 +19,15 @@ export class Response {
 
 
 export function DataResponse(payload) {
-	return new Response(null, payload)
+	return new Response(null, null, payload)
 }
 
 
 export function ErrorResponse(message) {
-	return new Response(message, null)
+	return new Response(message, null, null)
 }
 
-function NewErrorResponse(message, payload) {
-	return new Response(message, payload)
+export function ErrorCodeResponse(message) {
+    return new Response(message, null, null
+    )
 }
-
-

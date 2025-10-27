@@ -3,6 +3,8 @@ import {sanitizeListAttributes, sanitizeItemAttributes} from '../../util/sanitiz
 import Joi from '@hapi/joi';
 import {findMany, findOne, createOne, deleteOne, ProcedureType, updateOne} from "../../util/dataRequest.mjs";
 
+// Error Domain: 6
+
 //Get list details including users
 export async function getListDetails(req, userId) {
     let projection = {}

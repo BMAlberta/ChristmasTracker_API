@@ -1,7 +1,7 @@
 import { logger, LogMessage } from '../../config/winston.mjs';
 import Joi from '@hapi/joi';
 
-
+// Error Domain: 9
 
 async function getJoinedLists(userId, req) {
     try {

@@ -3,6 +3,8 @@ import { sanitizeListAttributes } from '../../util/sanitizeItems.mjs'
 import Joi from '@hapi/joi';
 import {findOne, updateOne, ProcedureType, deleteOne} from "../../util/dataRequest.mjs";
 
+// Error Domain: 10
+
 async function purchaseItem(userId, req) {
     let reqBody = req.body
     let input = purchaseDataValidation(reqBody)
@@ -23,7 +25,7 @@ async function purchaseItem(userId, req) {
             }
 
             let updatedList = await updateOne(ProcedureType.PURCHASE_ITEM, [reqBody.itemId, reqBody.listId, reqBody.quantityPurchased, userId])
-            sanitizeListAttributes(updatedList, userId)
+            // sanitizeListAttributes(updatedList, userId)
             logger.info("%o", new LogMessage("ListPurchasesImpl", "purchaseItem", "Successfully marked item as purchased.", {
                 "listInfo": reqBody.listId, "itemInfo": reqBody.itemId
             }, req))

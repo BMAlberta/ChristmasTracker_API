@@ -1,5 +1,8 @@
 import { logger, LogMessage } from '../config/winston.mjs';
 import {findMany, ProcedureType} from "../util/dataRequest.mjs";
+// Error Domain Code: 4
+
+// Error Sub Code: 1
 async function getPurchaseOverviews(userId, req) {
     try {
 
@@ -13,7 +16,7 @@ async function getPurchaseOverviews(userId, req) {
     }
 }
 
-
+// Error Sub Code: 2
 async function getPurchaseOverviewsNew(userId) {
     try {
         let fetchResult = await findMany(ProcedureType.PURCHASE_SUMMARY_BY_LIST, [userId])

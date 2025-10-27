@@ -3,15 +3,20 @@ import {findMany, ProcedureType} from "../util/dataRequest.mjs";
 import UserProfileServiceImpl from "./UserProfileImpl.mjs"
 import ListDetailsImpl from "./list/ListDetailsImpl.mjs";
 
+
+// Error Domain Code: 3
+
+// Error Sub-Domain Code: 1
 async function aggregateData(userId, req) {
     try {
 
         let userMetadata = await UserProfileServiceImpl.getUserOverview(userId, req);
-        let listOveviews = await ListDetailsImpl.getOverviewsForList(userId, req);
+        // let listOverviews = await ListDetailsImpl.getOverviewsForList(userId, req);
+        let listOverviews = await ListDetailsImpl.getListDetailsWithItems(userId, req);
 
         let aggResult = {
             "userMetadata": userMetadata,
-            "listOverviews": listOveviews,
+            "listOverviews": listOverviews,
             "activity": {}
         };
 

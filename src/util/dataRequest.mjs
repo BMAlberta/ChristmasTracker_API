@@ -23,13 +23,14 @@ export const ProcedureType = Object.freeze({
     UPDATE_LIST: "CALL tracker.updateList(?,?)",
     DELETE_LIST: "CALL tracker.deleteList(?)",
     //name, desc, link, price, quantity, owner, list
-    ADD_ITEM_TO_LIST: "CALL tracker.addItemToList(?,?,?,?,?,?,?)",
-    ADD_OFFLIST_ITEM_TO_LIST: "CALL tracker.addOffListItem(?,?,?,?,?,?,?)",
+    ADD_ITEM_TO_LIST: "CALL tracker.addItemToList(?,?,?,?,?,?,?,?)",
+    ADD_OFFLIST_ITEM_TO_LIST: "CALL tracker.addOffListItem(?,?,?,?,?,?,?,?)",
     GET_ITEM_METADATA: "CALL tracker.getItemMetadata(?,?)",
     UPDATE_ITEM: "CALL tracker.updateItemAndReturnList(?,?,?,?,?,?,?)",
     DELETE_ITEM: "CALL tracker.deleteItemAndReturnList(?,?)",
     PURCHASE_ITEM: "CALL tracker.markItemPurchased(?,?,?,?)",
-    RETRACT_PURCHASE: "CALL tracker.retractItemPurchase(?,?,?)"
+    RETRACT_PURCHASE: "CALL tracker.retractItemPurchase(?,?,?)",
+    GET_LIST_DETAILS_WITH_ITEMS: "CALL tracker.getMemberListDetailsWithItems(?)"
 });
 
 export async function makeFormattedDataRequest(procedureName, data) {

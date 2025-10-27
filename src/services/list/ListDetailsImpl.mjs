@@ -1,9 +1,9 @@
 import { logger, LogMessage } from '../../config/winston.mjs';
-import { sanitizeListAttributes } from '../../util/sanitizeItems.mjs'
+import {sanitizeListAttributes, sanitizeOverviewListAttributes} from '../../util/sanitizeItems.mjs'
 import Joi from '@hapi/joi';
 import {findMany, findOne, createOne, deleteOne, ProcedureType, updateOne} from "../../util/dataRequest.mjs";
 
-
+// Error Domain: 7
 
 
 async function addNewItemToList(userId, req) {
@@ -40,7 +40,7 @@ async function addItemToOwnedList(userId, req) {
     }
 
     try {
-        let updatedList = await createOne(ProcedureType.ADD_ITEM_TO_LIST,[reqBody.name, reqBody.description, reqBody.link, reqBody.price, reqBody.quantity, userId, reqBody.listId]);
+        let updatedList = await createOne(ProcedureType.ADD_ITEM_TO_LIST,[reqBody.name, reqBody.description, reqBody.link, reqBody.price, reqBody.quantity, userId, reqBody.listId, reqBody.imageUrl]);
         logger.info("%o", new LogMessage("ListDetailImpl", "addItemToOwnedList", "Successfully added item to list", {
             "listInfo": reqBody.listId, "userInfo": userId
         }, req))
@@ -64,7 +64,7 @@ async function addNewItemToUnownedList(userId, req) {
     }
 
     try {
-        let updatedList = await createOne(ProcedureType.ADD_OFFLIST_ITEM_TO_LIST,[reqBody.name, reqBody.description, reqBody.link, reqBody.price, reqBody.quantity, userId, reqBody.listId]);
+        let updatedList = await createOne(ProcedureType.ADD_OFFLIST_ITEM_TO_LIST,[reqBody.name, reqBody.description, reqBody.link, reqBody.price, reqBody.quantity, userId, reqBody.listId, reqBody.imageUrl]);
         sanitizeListAttributes(updatedList, userId)
         logger.info("%o", new LogMessage("ListDetailImpl", "addOffListItem", "Successfully added item to list", {
             "listInfo": reqBody.listId, "userInfo": userId
@@ -72,6 +72,20 @@ async function addNewItemToUnownedList(userId, req) {
         return updatedList
     } catch (err) {
         logger.warn("%o", new LogMessage("ListDetailImpl", "addOffListItem", "Unable to add item to list.", {"error": err}, req))
+        throw err
+    }
+}
+
+
+async function getListDetailsWithItems(userId, req) {
+    try {
+
+        let fetchResult = await findMany(ProcedureType.GET_LIST_DETAILS_WITH_ITEMS, [userId])
+        sanitizeOverviewListAttributes(fetchResult, userId)
+        logger.info("%o", new LogMessage("ListDetailImpl", "getListDetailsWithItems", "Successfully fetched overviews.", {"userInfo": userId}, req))
+        return fetchResult
+    } catch (err) {
+        logger.warn("%o", new LogMessage("ListDetailImpl", "getListDetailsWithItems", "Unable to get overviews.", {"error": err}, req))
         throw err
     }
 }
@@ -169,7 +183,8 @@ function newItemValidation(data) {
         link: Joi.string().required(),
         price: Joi.number().required(),
         quantity: Joi.number().integer().required(),
-        listId: Joi.string().required()
+        listId: Joi.string().required(),
+        imageUrl: Joi.string().required()
     })
     return schema.validate(data)
 }
@@ -181,7 +196,8 @@ function newOffListItemValidation(data) {
         link: Joi.string().required(),
         price: Joi.number().required(),
         quantity: Joi.number().integer().required(),
-        listId: Joi.string().required()
+        listId: Joi.string().required(),
+        imageUrl: Joi.string().required()
     })
     return schema.validate(data)
 }
@@ -200,4 +216,4 @@ function updateItemValidation(data) {
 }
 
 
-export default {addNewItemToList, getOverviewsForList, updateItem, deleteItemFromList};
+export default {addNewItemToList, getOverviewsForList, updateItem, deleteItemFromList, getListDetailsWithItems};

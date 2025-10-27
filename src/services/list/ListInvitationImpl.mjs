@@ -1,6 +1,8 @@
 import { logger, LogMessage } from '../../config/winston.mjs';
 import OTPGenerator from 'otp-generator';
 import Joi from '@hapi/joi';
+// Error Domain: 8
+
 
 async function createInvitationToList(requesterId, req) {
     let reqBody = req.body

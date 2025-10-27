@@ -4,6 +4,9 @@ import { logger, LogMessage } from '../config/winston.mjs';
 import Joi from '@hapi/joi';
 import {findOne, updateOne, ProcedureType} from "../util/dataRequest.mjs";
 
+// Error Domain Code: 1
+
+// Error Domain Sub-Code: 1
 async function doLogin(req) {
     const session = req.session;
     let reqBody = req.body
@@ -60,7 +63,7 @@ async function doLogin(req) {
         throw err
     }
 }
-
+// Error Domain Sub-Code: 2
 async function doLogout(req) {
     try {
         const session = req.session
@@ -73,7 +76,7 @@ async function doLogout(req) {
         throw err
     }
 }
-
+// Error Domain Sub-Code: 3
 async function updatePassword(requester, req) {
     let reqBody = req.body
     let input = changePasswordValidation(reqBody)

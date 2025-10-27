@@ -1,3 +1,5 @@
+import {parse} from "dotenv";
+
 /**
  * Sanitizes and enhances the item model provided to include more UI friendly "privileges".
  *
@@ -15,6 +17,7 @@ export function sanitizeItemAttributes(itemModel, userId, listModel) {
     itemModel.deleteAllowed = calculateDeleteAllowed(itemModel, userId)
     itemModel.editAllowed = calculateEditAllowed(itemModel, userId)
     itemModel.canViewMetadata = !checkIfRequesterIsListOwner(listModel, userId)
+    itemModel.offListItem = !!itemModel.offListItem
     delete itemModel.purchaseDetails
     delete itemModel.purchased
 }
@@ -32,8 +35,18 @@ export function sanitizeListAttributes(listModel, userId) {
     if (ownedList) {
         listModel.items = listModel.items.filter(item => item.offListItem !== true)
     }
+
+    listModel.totalItems = parseInt(listModel.totalItems)
+    listModel.purchasedItems = parseInt(listModel.purchasedItems)
+
     listModel.items.forEach(item => {
         sanitizeItemAttributes(item, userId, listModel)
+    })
+}
+
+export function sanitizeOverviewListAttributes(listOverviewModel, userId) {
+    listOverviewModel.forEach(list => {
+        sanitizeListAttributes(list, userId)
     })
 }
 

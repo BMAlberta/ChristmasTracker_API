@@ -2,6 +2,9 @@ import { logger, LogMessage } from '../config/winston.mjs';
 import Joi from '@hapi/joi';
 import {findOne, updateOne, deleteOne, ProcedureType} from "../util/dataRequest.mjs";
 
+// Error Domain: 5
+
+// Error Sub Code: 1
 async function getUserOverview(userId, req) {
     try {
         const fetchResult = await findOne(ProcedureType.USER_DETAILS, [userId]);
@@ -13,6 +16,7 @@ async function getUserOverview(userId, req) {
     }
 }
 
+// Error Sub Code: 2
 async function updateUser(requesterId, req) {
     let reqBody = req.body
     let input = updateUserValidation(reqBody)
@@ -39,6 +43,7 @@ async function updateUser(requesterId, req) {
     }
 }
 
+// Error Sub Code: 3
 async function deleteUser(requesterId, userId) {
     if (requesterId !== userId) {
         logger.warn("%o", new LogMessage("UserProfileImpl", "deleteUser", "Only user can delete themselves.", {"userInfo": reqBody.userId}, req))

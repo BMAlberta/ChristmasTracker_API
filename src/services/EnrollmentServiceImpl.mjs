@@ -6,7 +6,7 @@ import Joi from '@hapi/joi';
 import {findOne, createOne, ProcedureType} from "../util/dataRequest.mjs";
 
 
-// Error Code Root: 100
+// Error Code Root: 2
 
 // Error Sub Code: 1
 async function enrollUser(req) {
@@ -114,7 +114,7 @@ async function enrollUserWithAccessCode(req) {
     let reqBody = req.body
     let inputValidated = newUserWithAccessKeyValidation(reqBody)
     if (inputValidated.error) {
-        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.1: Input validation failed.", {
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "2.5.1: Input validation failed.", {
             "error": inputValidated.error.message
         }, req))
         throw Error("100.5.1")
@@ -122,7 +122,7 @@ async function enrollUserWithAccessCode(req) {
 
     let passwordsMatch = newPasswordValidation(reqBody)
     if (passwordsMatch.error) {
-        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.2: Password validation failed.", {
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "2.5.2: Password validation failed.", {
             "error": passwordsMatch.error.message
         }, req))
         throw Error("100.5.2")
@@ -131,14 +131,14 @@ async function enrollUserWithAccessCode(req) {
     //Check if email is registered
     let emailRegistered = await isEmailRegistered(reqBody.email)
     if (emailRegistered === true) {
-        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.3: Email address already registered."))
+        logger.info("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "2.5.3: Email address already registered."))
         throw Error("100.5.3")
     }
 
 
 
     if (reqBody.accessKey !== process.env.BASIC_ENROLLMENT_ACCESS_KEY) {
-        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.4: Access Key validation failed."))
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "2.5.4: Access Key validation failed."))
         throw Error("100.5.4")
     }
 
@@ -153,7 +153,7 @@ async function enrollUserWithAccessCode(req) {
         let newUser = await createUser(combinedUserInfo)
         return newUser
     } catch (err){
-        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "100.5.5: User creation failed.", {
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "enrollUserWithAccessCode", "2.5.5: User creation failed.", {
             "error": err
         }, req))
         throw Error("100.5.5")
@@ -165,7 +165,7 @@ async function createUser(user) {
     let input = newUserValidation(user)
 
     if (input.error) {
-        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "createUser", "100.6.1: Input validation failed.", {
+        logger.warn("%o", new LogMessage("EnrollmentServiceImpl", "createUser", "2.6.1: Input validation failed.", {
             "error": input.error
         }))
         throw Error("100.6.1")
