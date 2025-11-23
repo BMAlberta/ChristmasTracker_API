@@ -5,6 +5,7 @@ import { DataResponse, ErrorResponse } from '../models/payload.mjs';
 import AuthServiceImpl from '../services/AuthServiceImpl.mjs';
 import util from '../middleware/session.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
+import { TrackerError } from '../config/errors.mjs';
 
 /**
    * @swagger
@@ -34,17 +35,16 @@ router.post("/login", async (req, res) => {
     try {
         let metadata = NetworkUtils.getCallerIP(req)
         if (!NetworkUtils.checkAppVersion(req)) {
-            logger.warn("%o", new LogMessage("AuthRouter", "postLogin", "App version not valid.", { "userId": req.body.email }))
-            res.status(401).json({
-                error: "Invalid app version"
-            });
+            logger.warn("%o", new LogMessage("AuthRouter", "postLogin", "App version not valid.", { "userId": req.body.email }, req))
+            res.status(401).json(new ErrorResponse(new TrackerError("1.1", "Invalid App version.")));
         } else {
             const userInfo = await AuthServiceImpl.doLogin(req)
             res.json(new DataResponse({userInfo}))
         }
     } catch (err) {
-        res.status(500).json(new ErrorResponse(err.message));
+        res.status(500).json(new ErrorResponse(err));
     }
+
 })
 
 /**
@@ -65,7 +65,7 @@ router.post("/logout", async (req, res) => {
         await AuthServiceImpl.doLogout(req)
         res.json(new DataResponse({"status": "success"}))
     } catch (err) {
-        res.status(500).json(new ErrorResponse(err.message));
+        res.status(500).json(new ErrorResponse(err));
     }
 })
 
@@ -96,9 +96,9 @@ router.post("/logout", async (req, res) => {
 router.post("/password/update", util.getUser, async (req, res) => {
     try {
         const result = await AuthServiceImpl.updatePassword(res.userId, req)
-        res.json(new DataResponse({"userId": result._id}))
+        res.json(new DataResponse({"userId": result.userId}))
     } catch (err) {
-        res.status(500).json(new ErrorResponse(err.message));
+        res.status(500).json(new ErrorResponse(err));
     }
 })
 export default router;

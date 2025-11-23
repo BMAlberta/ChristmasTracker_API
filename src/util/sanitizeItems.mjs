@@ -1,10 +1,12 @@
+import {parse} from "dotenv";
+
 /**
  * Sanitizes and enhances the item model provided to include more UI friendly "privileges".
  *
  * @export
- * @param {EmbeddedItemModel} itemModel - The raw ItemModel.
+ * @param itemModel - The raw ItemModel.
  * @param {string} userId - The user ID of the logged in/requesting user.
- * @param {EmbeddedListModel} listModel - The raw ListModel.
+ * @param listModel - The raw ListModel.
  */
 export function sanitizeItemAttributes(itemModel, userId, listModel) {
     const purchaseAttributes = generatePurchaseAttributes(itemModel, userId)
@@ -15,6 +17,7 @@ export function sanitizeItemAttributes(itemModel, userId, listModel) {
     itemModel.deleteAllowed = calculateDeleteAllowed(itemModel, userId)
     itemModel.editAllowed = calculateEditAllowed(itemModel, userId)
     itemModel.canViewMetadata = !checkIfRequesterIsListOwner(listModel, userId)
+    itemModel.offListItem = !!itemModel.offListItem
     delete itemModel.purchaseDetails
     delete itemModel.purchased
 }
@@ -23,17 +26,32 @@ export function sanitizeItemAttributes(itemModel, userId, listModel) {
  * Sanitizes and enhances the list model provided to include more UI friendly "privileges".
  *
  * @export
- * @param {EmbeddedItemModel} itemModel - The raw ItemModel.
+ * @param itemModel - The raw ItemModel.
  * @param {string} userId - The user ID of the logged in/requesting user.
  */
 export function sanitizeListAttributes(listModel, userId) {
     const ownedList = checkIfRequesterIsListOwner(listModel, userId)
     listModel.canViewMetadata = !ownedList
-    if (ownedList) {
-        listModel.items = listModel.items.filter(item => item.offListItem !== true)
+
+    if (Array.isArray(listModel.items)) {
+        if (ownedList) {
+            listModel.items = listModel.items.filter(item => Boolean(item.offListItem) !== true)
+            listModel.totalItems = listModel.items.length
+        }
+        listModel.items.forEach(item => {
+            sanitizeItemAttributes(item, userId, listModel)
+        })
+    } else {
+        listModel.items = []
     }
-    listModel.items.forEach(item => {
-        sanitizeItemAttributes(item, userId, listModel)
+
+    listModel.totalItems = parseInt(listModel.totalItems)
+    listModel.purchasedItems = parseInt(listModel.purchasedItems)
+}
+
+export function sanitizeOverviewListAttributes(listOverviewModel, userId) {
+    listOverviewModel.forEach(list => {
+        sanitizeListAttributes(list, userId)
     })
 }
 
@@ -78,7 +96,7 @@ function calculatePurchasesAllowed(itemModel, userId, state) {
  * @returns {boolean}
  */
 function checkIfRequesterIsListOwner(listModel, userId) {
-    return userId === listModel.owner
+    return userId === listModel.ownerInfo.userId
 }
 
 function checkIfRequesterIsItemOwner(itemModel, userId) {
@@ -134,7 +152,8 @@ export function calculatePurchaseState(itemModel, userId) {
         }
     }
 
-    if (purchaseInfo.purchasers.length == 0) {
+    let purchaseInfoToCheck = purchaseInfo
+    if (purchaseInfoToCheck.length === 0) {
         return {
             retractablePurchase: false,
             purchaseState: PurchaseStateEnum.AVAILABLE,
@@ -142,10 +161,10 @@ export function calculatePurchaseState(itemModel, userId) {
         }
     }
 
-    if (purchaseInfo.purchasers.length > 0) {
+    if (purchaseInfoToCheck.length > 0) {
 
-        const userIsPurchaser = purchaseInfo.purchasers.some((obj) => obj.purchaserId === userId);
-        var totalPurchases = purchaseInfo.purchasers.reduce((n, {quantityPurchased}) => n + quantityPurchased, 0)
+        const userIsPurchaser = purchaseInfoToCheck.some((obj) => obj.purchaser === userId);
+        const totalPurchases = purchaseInfoToCheck.reduce((n, {quantityPurchased}) => n + quantityPurchased, 0);
         const maxPurchasesReached = totalPurchases >= itemModel.quantity
 
         if (!maxPurchasesReached && !userIsPurchaser) {

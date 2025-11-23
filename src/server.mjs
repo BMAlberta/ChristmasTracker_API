@@ -1,4 +1,5 @@
 import newrelic from 'newrelic'
+import trace from './middleware/trace.mjs'
 import { createSessionStore, validateAuth } from './middleware/session.mjs';
 import express from 'express';
 import createError from 'http-errors';
@@ -15,6 +16,8 @@ import listDetailRouter from './routes/list/listDetails.mjs';
 import listInviteRouter from './routes/list/listInvite.mjs';
 import listMemberRouter from './routes/list/listMembers.mjs';
 import statsRouter from './routes/statsRouter.mjs';
+import overviewRouter from './routes/overviewRouter.mjs';
+import activityRouter from './routes/activityRouter.mjs';
 import swaggerUi from 'swagger-ui-express'
 // import openapiSpecification from './swagger.mjs'
 
@@ -26,15 +29,17 @@ import swaggerJSDoc from 'swagger-jsdoc';
 
 export async function startServer() {
     const app = express()
-
+    app.use(trace);
     app.use(cors());
-    var sessionStore = await createSessionStore()
+    const sessionStore = await createSessionStore();
     app.use(sessionStore)
     
     app.use(express.urlencoded({extended: true})); 
-    app.use(express.json());   
+    app.use(express.json());
+
     
     const format = morganJson(':date[iso] :method :url :status :remote-addr :response-time ms');
+
     
     app.enable("trust proxy")
     
@@ -65,6 +70,8 @@ export async function startServer() {
     app.use('/' + process.env.BASE_API_BATH + '/lists/details', validateAuth, listDetailRouter)
     app.use('/' + process.env.BASE_API_BATH + '/lists/members/invite', validateAuth, listInviteRouter)
     app.use('/' + process.env.BASE_API_BATH + '/lists/members', validateAuth, listMemberRouter)
+    app.use('/' + process.env.BASE_API_BATH + '/overview', validateAuth, overviewRouter)
+    app.use('/' + process.env.BASE_API_BATH + '/activity', validateAuth, activityRouter)
     
     
     // simple route
@@ -97,9 +104,9 @@ export async function startServer() {
     });
 
     app.listen(3000)
-    var logInfo = new LogMessage("Server", "Startup", "Application is running.", {
+    const logInfo = new LogMessage("Server", "Startup", "Application is running.", {
         "port": process.env.API_PORT,
-    })
+    });
     logger.info("%o", logInfo)
 
 }

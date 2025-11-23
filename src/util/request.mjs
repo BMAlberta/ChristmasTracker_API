@@ -1,7 +1,7 @@
 import { LogMessage, logger } from '../config/winston.mjs';
 
 function getCallerIP(request) {
-    var ip = request.headers['x-forwarded-for'] ||
+    let ip = request.headers['x-forwarded-for'] ||
         request.connection.remoteAddress ||
         request.socket.remoteAddress ||
         request.connection.socket.remoteAddress;
@@ -10,7 +10,7 @@ function getCallerIP(request) {
     if (ip.length > 0) {
         return ip[0];
     } else {
-        var logInfo = new LogMessage("RequestUtil", "getCallerIP", "Unable to determine login IP address.")
+        const logInfo = new LogMessage("RequestUtil", "getCallerIP", "Unable to determine login IP address.");
         logger.warn("%o", logInfo)
         return "No-IP";
     }

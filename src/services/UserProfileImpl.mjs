@@ -1,20 +1,14 @@
-import UserModel from '../models/user.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
 import Joi from '@hapi/joi';
+import {findOne, updateOne, deleteOne, ProcedureType} from "../util/dataRequest.mjs";
 
-async function getUserOverview(req) {
-    let userId = req.params.id
+// Error Domain: 5
+
+// Error Sub Code: 1
+async function getUserOverview(userId, req) {
     try {
-        const fetchResult = await UserModel.findById(userId, {
-            'email': 1,
-            'firstName': 1,
-            'lastName': 1,
-            'creationDate': 1,
-            'lastLogInDate': 1,
-            'lastLogInLocation': 1,
-            'lastPasswordChange': 1,
-        })
-        logger.info("%o", new LogMessage("UserProfileImpl", "getUserOverview", "Successfully retrieved user."))
+        const fetchResult = await findOne(ProcedureType.USER_DETAILS, [userId]);
+        logger.info("%o", new LogMessage("UserProfileImpl", "getUserOverview", "Successfully retrieved user.",{"userInfo": userId}, req))
         return fetchResult
     } catch (err) {
         logger.info("%o", new LogMessage("UserProfileImpl", "getUserOverview", "Failed to retrieved user.", {"error": err}, req))
@@ -22,6 +16,7 @@ async function getUserOverview(req) {
     }
 }
 
+// Error Sub Code: 2
 async function updateUser(requesterId, req) {
     let reqBody = req.body
     let input = updateUserValidation(reqBody)
@@ -37,11 +32,9 @@ async function updateUser(requesterId, req) {
     }
 
     try {
-        let updatedUser = await UserModel.findByIdAndUpdate(reqBody.userId, {
-            firstName: reqBody.firstName, lastName: reqBody.lastName, email: reqBody.email
-        }, {
-            new: true
-        })
+        let userData = [reqBody.userId, reqBody.firstName, reqBody.lastName]
+        let updatedUser = await updateOne(ProcedureType.UPDATE_USER_INFO, userData);
+
         logger.info("%o", new LogMessage("UserProfileImpl", "updateUser", "Successfully updated user info.", {"userInfo": reqBody.userId}, req))
         return updatedUser
     } catch (err) {
@@ -50,13 +43,14 @@ async function updateUser(requesterId, req) {
     }
 }
 
+// Error Sub Code: 3
 async function deleteUser(requesterId, userId) {
     if (requesterId !== userId) {
-        logger.warn("%o", new LogMessage("UserProfileImpl", "deleteUser", "Only user can delete themselves.", {"userInfo": reqBody.userId}, req))
+        logger.warn("%o", new LogMessage("UserProfileImpl", "deleteUser", "Only user can delete themselves.", {"userInfo": userId}, req))
         throw Error('User must delete their own account.')
     }
     try {
-        await UserModel.findByIdAndDelete(userId)
+        await deleteOne(ProcedureType.DELETE_USER, [userId])
         logger.info("%o", new LogMessage("UserProfileImpl", "deleteUser", "Successfully deleted user", {"userInfo": userId}, req))
 
     } catch (err) {
@@ -69,8 +63,7 @@ function updateUserValidation(data) {
     const schema = Joi.object({
         userId: Joi.string().required(),
         firstName: Joi.string().required(),
-        lastName: Joi.string().required(),
-        email: Joi.string().required()
+        lastName: Joi.string().required()
     })
     return schema.validate(data)
 }

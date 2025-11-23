@@ -8,8 +8,8 @@ import CoreImpl from '../../services/list/ListCoreImpl.mjs';
 
 router.post("/", util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {
-        const detail = await PurchaseImpl.purchaseItem(res.userId, req)
-        res.json(new DataResponse({detail}))
+        const purchaseInfo = await PurchaseImpl.purchaseItem(res.userId, req)
+        res.json(new DataResponse({purchaseInfo}))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }

@@ -1,8 +1,8 @@
 import { logger, LogMessage } from '../../config/winston.mjs';
-import { EmbeddedListModel } from '../../models/embeddedList.mjs';
-import Invite from '../../models/invitation.mjs';
 import OTPGenerator from 'otp-generator';
 import Joi from '@hapi/joi';
+// Error Domain: 8
+
 
 async function createInvitationToList(requesterId, req) {
     let reqBody = req.body
@@ -13,7 +13,7 @@ async function createInvitationToList(requesterId, req) {
         throw Error('Input validation failed. ' + input.error)
     }
 
-    let fetchResult = await EmbeddedListModel.findById(reqBody.listId)
+    let fetchResult = null
     let listInContext = fetchResult.toObject()
 
     if (listInContext === null) {
@@ -35,11 +35,11 @@ async function createInvitationToList(requesterId, req) {
             upperCaseAlphabets: true, lowerCaseAlphabets: true, specialChars: true
         })
 
-        const invitation = new Invite({
-            invitationCode: generatedCode, listId: reqBody.listId, userId: reqBody.userId
-        })
+        // const invitation = new Invite({
+        //     invitationCode: generatedCode, listId: reqBody.listId, userId: reqBody.userId
+        // })
 
-        const inviteCode = await invitation.save()
+        const inviteCode = null
         logger.info("%o", new LogMessage("ListInvitationImpl", "createInvitation", "Successfully generated list invitation.", {"listInfo": reqBody.listId}, req))
         return inviteCode
 
@@ -58,7 +58,7 @@ async function revokeInvitationToList(requesterId, req) {
         throw Error('Input validation failed. ' + input.error)
     }
 
-    let fetchResult = await EmbeddedListModel.findById(reqBody.listId)
+    let fetchResult = null
     let listInContext = fetchResult.toObject()
 
     if (listInContext === null) {
@@ -100,11 +100,11 @@ async function acceptInvitationToList(requesterId, req) {
     }
 
     try {
-        let fetchResult = await Invite.findOne({
-            invitationCode: reqBody.inviteCode
-        })
-        let inviteDetails = fetchResult.toObject()
-
+        // let fetchResult = await Invite.findOne({
+        //     invitationCode: reqBody.inviteCode
+        // })
+        // let inviteDetails = fetchResult.toObject()
+        let inviteDetails = null
         if (inviteDetails === null) {
             logger.warn("%o", new LogMessage("ListInvitationImpl", "acceptInvitationToList", "No invitation found.", {"inviteInfo": reqBody.inviteCode}, req))
             throw Error('No active invitation found.')
@@ -116,10 +116,7 @@ async function acceptInvitationToList(requesterId, req) {
             }, req))
             throw Error('Only the invitee can accept an invitation.')
         }
-
-        await EmbeddedListModel.findByIdAndUpdate(reqBody.listId, {
-            $addToSet: {members: requesterId}, lastUpdateDate: Date.now()
-        })
+        // add
         logger.info("%o", new LogMessage("ListInvitationImpl", "acceptInvitationToList", "Successfully accepted invite.", {
             "inviteInfo": reqBody.inviteCode, "userInfo": requesterId
         }, req))
