@@ -10,8 +10,9 @@ export async function createSessionStore() {
 	// 	throw Error("Unable to get a connection")
 	// }
 	const MemcachedStore = MemcachedStoreFactory(sessionManager);
+    let memcacheConnection = process.env.MEMCACHE_SERVER + ":" + process.env.MEMCACHE_PORT
 	let store = new MemcachedStore({
-		servers: [process.env.MEMCACHE_SERVER], // Array of Memcached server addresses
+		servers: [memcacheConnection], // Array of Memcached server addresses
 		prefix: '_session_' // Optional prefix for session keys in Memcached
 	});
 
