@@ -35,8 +35,8 @@ router.get("/owner/:id", util.getUser, async (req, res) => {
 
 router.post("/create", util.getUser, async (req, res) => {
     try {
-        const detail = await CoreImpl.createList(res.userId, req)
-        res.json(new DataResponse({detail}))
+        const listInfo = await CoreImpl.createList(res.userId, req)
+        res.json(new DataResponse({listInfo}))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }

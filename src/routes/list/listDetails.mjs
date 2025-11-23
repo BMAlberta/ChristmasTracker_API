@@ -17,8 +17,8 @@ router.get("/overviews", util.getUser, async (req, res) => {
 
 router.post("/addItem", util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {
-        const detail = await DetailImpl.addNewItemToList(res.userId, req)
-        res.json(new DataResponse({detail}))
+        const itemInfo = await DetailImpl.addNewItemToList(res.userId, req)
+        res.json(new DataResponse({itemInfo}))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }
@@ -26,8 +26,8 @@ router.post("/addItem", util.getUser, CoreImpl.validateListStatus, async (req, r
 
 router.patch('/update', util.getUser, CoreImpl.validateListStatus, async (req, res) => {
     try {
-        let detail = await DetailImpl.updateItem(res.userId, req)
-        res.json(new DataResponse({detail}));
+        let itemInfo = await DetailImpl.updateItem(res.userId, req)
+        res.json(new DataResponse({itemInfo}));
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }

@@ -3,6 +3,7 @@ import NetworkUtils from '../util/request.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
 import Joi from '@hapi/joi';
 import {findOne, updateOne, ProcedureType} from "../util/dataRequest.mjs";
+import {TrackerError} from "../config/errors.mjs";
 
 // Error Domain Code: 1
 
@@ -15,7 +16,8 @@ async function doLogin(req) {
 
     if (input.error) {
         logger.warn("%o", new LogMessage("ListDetailImpl", "doLogin", "Input validation failed", {"error": input.error}, req))
-        throw Error('Input validation failed. ' + input.error)
+        // throw Error('Input validation failed. ' + input.error)
+        throw new TrackerError("1.2", "Login input validation failed")
     }
 
     // Find user by email
@@ -24,20 +26,23 @@ async function doLogin(req) {
         user = await findOne(ProcedureType.LOGIN_INFO, reqBody.email)
     } catch (err) {
         logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to query for users", { "user": reqBody.email, "ip": loginIp }, req))
-        throw Error("Query failed.")
+        // throw Error("Query failed.")
+        throw new TrackerError("1.3", "Failed to search for user.")
     }
 
     if (!user) {
         logger.info("%o", new LogMessage("AuthServiceImpl", "doLogin", "Unable to find user.", { "userId": reqBody.email }, req))
-        throw Error('User not found.')
+        // throw Error('User not found.')
+        throw new TrackerError("1.4", "Unable to find user.")
     }
 
+
     // Validate password
-    // let validPassword = await bcrypt.compare(reqBody.password, user.pwd)
-    let validPassword = reqBody.password === user.pwd
+    let validPassword = await bcrypt.compare(reqBody.password, user.pwd)
     if (!validPassword) {
         logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Password validation failed", { "userId": reqBody.email }, req))
-        throw Error('Credential validation failed.')
+        // throw Error('Credential validation failed.')
+        throw new TrackerError("1.5", "Credential validation failed.")
     }
 
     // Update login details
@@ -57,10 +62,16 @@ async function doLogin(req) {
         await session.save()
         logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Login successful", { "user": user.userId, "session": session.details }, req))   
 
-        return user.userId
+       return {
+            userId: user.userId,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            pcr: !!user.passwordChangeRequired
+        }
+        // return user.userId
     } catch (err) {
         logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogin", "Session generation failed", { "user": user.userId, "error": err }, req))
-        throw err
+        throw new TrackerError("1.6", "Unable to generate session.")
     }
 }
 // Error Domain Sub-Code: 2
@@ -73,7 +84,8 @@ async function doLogout(req) {
 
     } catch (err) {
         logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogout", "Logout failed.", { "error": err}, req))
-        throw err
+        // throw err
+        throw new TrackerError("1.7", "Logout failed.")
     }
 }
 // Error Domain Sub-Code: 3
@@ -83,22 +95,22 @@ async function updatePassword(requester, req) {
 
     if (input.error) {
         logger.warn("%o", new LogMessage("ListDetailImpl", "updatePassword", "Input validation failed", {"error": input.error}, req))
-        throw Error('Input validation failed. ' + input.error)
+        // throw Error('Input validation failed. ' + input.error)
+        throw new TrackerError("1.8", "Password reset input validation failed.")
     }
 
     try {
-        // const user = await UserModel.findById(requester)
-        // const validOldPassword = await bcrypt.compare(reqBody.oldPassword, user.pwd)
+        const validOldPassword = await bcrypt.compare(reqBody.oldPassword, user.pwd)
         const user = await findOne(ProcedureType.PASSWORD_INFO, requester)
-        const validOldPassword = true
 
         if (!validOldPassword) {
             logger.warn("%o", new LogMessage("AuthServiceImpl", "updatePassword", "Password validation failed.", { "userId": user.userId}, req))
-            throw Error('Password validation failed')
+            // throw Error('Password validation failed')
+            throw new TrackerError("1.9", "Password validation failed.")
         }
 
-        // let saltedPassword = await generatePassword(reqBody.newPassword)
-        let saltedPassword = reqBody.newPassword
+        let saltedPassword = await generatePassword(reqBody.newPassword)
+        // let saltedPassword = reqBody.newPassword
 
         await updateOne(ProcedureType.UPDATE_PASSWORD, [requester, saltedPassword])
 
@@ -106,12 +118,13 @@ async function updatePassword(requester, req) {
         return user
     } catch (err) {
         logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogout", "Change password failed.", { "error": err},req))
-        throw err
+        // throw err
+        throw new TrackerError("1.10", "Password update failed.")
     }
 }
 
 async function generatePassword(rawText) {
-    const salt = await bcrypt.genSalt(10)
+    const salt = await bcrypt.genSalt(12)
     return await bcrypt.hash(rawText, salt)
 }
 

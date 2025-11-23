@@ -32,16 +32,21 @@ export function sanitizeItemAttributes(itemModel, userId, listModel) {
 export function sanitizeListAttributes(listModel, userId) {
     const ownedList = checkIfRequesterIsListOwner(listModel, userId)
     listModel.canViewMetadata = !ownedList
-    if (ownedList) {
-        listModel.items = listModel.items.filter(item => item.offListItem !== true)
+
+    if (Array.isArray(listModel.items)) {
+        if (ownedList) {
+            listModel.items = listModel.items.filter(item => Boolean(item.offListItem) !== true)
+            listModel.totalItems = listModel.items.length
+        }
+        listModel.items.forEach(item => {
+            sanitizeItemAttributes(item, userId, listModel)
+        })
+    } else {
+        listModel.items = []
     }
 
     listModel.totalItems = parseInt(listModel.totalItems)
     listModel.purchasedItems = parseInt(listModel.purchasedItems)
-
-    listModel.items.forEach(item => {
-        sanitizeItemAttributes(item, userId, listModel)
-    })
 }
 
 export function sanitizeOverviewListAttributes(listOverviewModel, userId) {
@@ -91,7 +96,7 @@ function calculatePurchasesAllowed(itemModel, userId, state) {
  * @returns {boolean}
  */
 function checkIfRequesterIsListOwner(listModel, userId) {
-    return userId === listModel.owner
+    return userId === listModel.ownerInfo.userId
 }
 
 function checkIfRequesterIsItemOwner(itemModel, userId) {

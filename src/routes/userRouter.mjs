@@ -17,8 +17,8 @@ router.get("/:id", async (req, res) => {
 
 router.patch("/", util.getUser, async (req, res) => {
     try {
-        const result = await UserProfileServiceImpl.updateUser(res.userId, req)
-        res.json(new DataResponse(result))
+        const updateInfo = await UserProfileServiceImpl.updateUser(res.userId, req)
+        res.json(new DataResponse({ updateInfo }))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }
@@ -26,6 +26,15 @@ router.patch("/", util.getUser, async (req, res) => {
 
 router.delete("/:id", util.getUser, async (req, res) => {
     res.status(500).json(new ErrorResponse("Currently not supported."));
+})
+
+router.get("/metadata/list", util.getUser, async (req, res) => {
+    try {
+        const userMatadata = await UserProfileServiceImpl.getUserOverview(res.userId, req)
+        res.json(new DataResponse({ userMatadata }))
+    } catch (err) {
+        res.status(500).json(new ErrorResponse(err.message));
+    }
 })
 
 export default router;

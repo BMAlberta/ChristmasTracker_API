@@ -18,14 +18,14 @@ export async function getListDetails(req, userId) {
 
         if (result.listId) {
             sanitizeListAttributes(result, userId)
-            logger.info("%o", new LogMessage("ListCoreImpl", "Get list details", "Successfully retrieved list details.", {"listInfo": result.listId}))
+            logger.info("%o", new LogMessage("ListCoreImpl", "Get list details", "Successfully retrieved list details.", {"listInfo": result.listId}, req))
             return result
         } else {
-            logger.warn("%o", new LogMessage("ListCoreImpl", "Get list details", "Unable to find list details for provided ID.", {"listInfo": listId}))
+            logger.warn("%o", new LogMessage("ListCoreImpl", "Get list details", "Unable to find list details for provided ID.", {"listInfo": listId}, req))
             throw Error('No list matching that ID can be found.')
         }
     } catch (err) {
-        logger.warn("%o", new LogMessage("ListCoreImpl", "Get list details", "Unable to retrieve list details.", {"listInfo": listId}))
+        logger.warn("%o", new LogMessage("ListCoreImpl", "Get list details", "Unable to retrieve list details.", {"listInfo": listId}, req))
         throw err
     }
 }
@@ -53,7 +53,7 @@ export async function createList(userId, req) {
     }
 
     try {
-        const newList = await createOne(ProcedureType.CREATE_LIST, [input.value.listName, userId])
+        const newList = await createOne(ProcedureType.CREATE_LIST, [input.value.listName, userId, input.value.listTheme])
         logger.info("%o", new LogMessage("ListCoreImpl", "createList", "Successfully created list.", {"listInfo": newList._id}, req))
         return newList
     } catch (err) {
@@ -144,7 +144,8 @@ export async function validateListStatus(req, res, next) {
 
 function newListValidation(data) {
     const schema = Joi.object({
-        listName: Joi.string().required()
+        listName: Joi.string().required(),
+        listTheme: Joi.string().required()
     })
     return schema.validate(data);
 }

@@ -16,6 +16,7 @@
     "@hapi/joi": "^17.1.1",
     "app-root-path": "^3.0.0",
     "bcryptjs": "^2.4.3",
+    "cls-hooked": "^4.2.2",
     "connect-memjs": "^0.2.1",
     "cors": "^2.8.5",
     "dotenv": "^8.6.0",
@@ -33,6 +34,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "typescript": "^5.9.2",
+    "uuid": "^13.0.0",
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^4.7.1"
   },

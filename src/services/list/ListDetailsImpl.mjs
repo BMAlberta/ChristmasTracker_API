@@ -40,14 +40,11 @@ async function addItemToOwnedList(userId, req) {
     }
 
     try {
-        let updatedList = await createOne(ProcedureType.ADD_ITEM_TO_LIST,[reqBody.name, reqBody.description, reqBody.link, reqBody.price, reqBody.quantity, userId, reqBody.listId, reqBody.imageUrl]);
+        let updatedList = await createOne(ProcedureType.ADD_ITEM_TO_LIST,[reqBody.name, reqBody.description, reqBody.link, reqBody.price, reqBody.quantity, reqBody.priority, reqBody.imageUrl, userId, reqBody.listId]);
         logger.info("%o", new LogMessage("ListDetailImpl", "addItemToOwnedList", "Successfully added item to list", {
             "listInfo": reqBody.listId, "userInfo": userId
         }, req))
-
-        sanitizeListAttributes(updatedList, userId)
         return updatedList
-
     } catch (err) {
         logger.warn("%o", new LogMessage("ListDetailImpl", "addItemToOwnedList", "Unable to add item to list.", {"error": err}, req))
         throw err
@@ -65,7 +62,6 @@ async function addNewItemToUnownedList(userId, req) {
 
     try {
         let updatedList = await createOne(ProcedureType.ADD_OFFLIST_ITEM_TO_LIST,[reqBody.name, reqBody.description, reqBody.link, reqBody.price, reqBody.quantity, userId, reqBody.listId, reqBody.imageUrl]);
-        sanitizeListAttributes(updatedList, userId)
         logger.info("%o", new LogMessage("ListDetailImpl", "addOffListItem", "Successfully added item to list", {
             "listInfo": reqBody.listId, "userInfo": userId
         }, req))
@@ -85,7 +81,7 @@ async function getListDetailsWithItems(userId, req) {
         logger.info("%o", new LogMessage("ListDetailImpl", "getListDetailsWithItems", "Successfully fetched overviews.", {"userInfo": userId}, req))
         return fetchResult
     } catch (err) {
-        logger.warn("%o", new LogMessage("ListDetailImpl", "getListDetailsWithItems", "Unable to get overviews.", {"error": err}, req))
+        logger.warn("%o", new LogMessage("ListDetailImpl", "getListDetailsWithItems", "Unable to get overviews.", {"error": err.message}, req))
         throw err
     }
 }
@@ -111,7 +107,6 @@ async function updateItem(userId, req) {
     }
 
     try {
-
         const fetchResult = await findOne(ProcedureType.GET_ITEM_METADATA, [reqBody.itemId, reqBody.listId])
 
         if (fetchResult != null) {
@@ -121,12 +116,10 @@ async function updateItem(userId, req) {
                 }, req))
                 throw Error('Requester must be the owner/creator.')
             }
-
-            let updatedList = await updateOne(ProcedureType.UPDATE_ITEM,[reqBody.itemId, reqBody.listId, reqBody.name, reqBody.description, reqBody.link, reqBody.price, reqBody.quantity])
+            let updatedList = await updateOne(ProcedureType.UPDATE_ITEM,[reqBody.itemId, reqBody.listId, reqBody.name, reqBody.description, reqBody.link, reqBody.price, reqBody.quantity, reqBody.priority, reqBody.imageUrl])
             logger.info("%o", new LogMessage("ListDetailImpl", "updateItem", "Successfully updated item.", {
                 "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId
             }, req))
-            sanitizeListAttributes(updatedList, userId)
             return updatedList
         }
     } catch (err) {
@@ -135,7 +128,6 @@ async function updateItem(userId, req) {
         }, req))
         throw err
     }
-
 }
 
 async function deleteItemFromList(req, userId) {
@@ -178,13 +170,14 @@ async function deleteItemFromList(req, userId) {
 
 function newItemValidation(data) {
     const schema = Joi.object({
-        name: Joi.string().required(),
-        description: Joi.string().required(),
+        name: Joi.string(),
+        description: Joi.string().allow(''),
         link: Joi.string().required(),
         price: Joi.number().required(),
         quantity: Joi.number().integer().required(),
+        priority: Joi.number().integer().required(),
         listId: Joi.string().required(),
-        imageUrl: Joi.string().required()
+        imageUrl: Joi.string().allow(null),
     })
     return schema.validate(data)
 }
@@ -192,13 +185,15 @@ function newItemValidation(data) {
 function newOffListItemValidation(data) {
     const schema = Joi.object({
         name: Joi.string().required(),
-        description: Joi.string().required(),
+        description: Joi.string().allow(''),
         link: Joi.string().required(),
         price: Joi.number().required(),
         quantity: Joi.number().integer().required(),
         listId: Joi.string().required(),
-        imageUrl: Joi.string().required()
+        imageUrl: Joi.string().allow(null),
+        priority: Joi.number().integer()
     })
+
     return schema.validate(data)
 }
 
@@ -209,8 +204,10 @@ function updateItemValidation(data) {
         link: Joi.string().required(),
         price: Joi.number().required(),
         quantity: Joi.number().integer().required(),
+        priority: Joi.number().integer().required(),
         listId: Joi.string().required(),
-        itemId: Joi.string().required()
+        itemId: Joi.string().required(),
+        imageUrl: Joi.string().required()
     })
     return schema.validate(data)
 }

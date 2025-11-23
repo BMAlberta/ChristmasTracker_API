@@ -10,7 +10,7 @@ export const ProcedureType = Object.freeze({
     USER_ID: "getUserId",
     UPDATE_USER_RETURN_INFO: "updateAndReturnUserInfo",
     UPDATE_LOGIN_INFO: "CALL tracker.updateLastLoginDetails(?,?,?)",
-    UPDATE_USER_INFO: "updateUserInfo",
+    UPDATE_USER_INFO: "CALL tracker.updateUserInfo(?,?,?)",
     OWNED_LISTS: "CALL tracker.getOwnedLists(?)",
     UPDATE_PASSWORD: "CALL tracker.updatePassword(?,?)",
     PASSWORD_INFO: "CALL tracker.getPasswordInfo(?)",
@@ -18,19 +18,19 @@ export const ProcedureType = Object.freeze({
     CHECK_USER: "CALL tracker.checkForUserByEmail(?)",
     DELETE_USER: "CALL tracker.deleteUserById(?)",
     LIST_DETAILS_WITH_ITEMS: "CALL tracker.getListDetailsWithItems(?)",
-    CREATE_LIST: "CALL tracker.createList(?,?)",
+    CREATE_LIST: "CALL tracker.createList(?,?,?)",
     GET_LIST_METADATA: "CALL tracker.getListMetadata(?)",
     UPDATE_LIST: "CALL tracker.updateList(?,?)",
     DELETE_LIST: "CALL tracker.deleteList(?)",
-    //name, desc, link, price, quantity, owner, list
-    ADD_ITEM_TO_LIST: "CALL tracker.addItemToList(?,?,?,?,?,?,?,?)",
+    ADD_ITEM_TO_LIST: "CALL tracker.addItemToList(?,?,?,?,?,?,?,?,?)",
     ADD_OFFLIST_ITEM_TO_LIST: "CALL tracker.addOffListItem(?,?,?,?,?,?,?,?)",
     GET_ITEM_METADATA: "CALL tracker.getItemMetadata(?,?)",
-    UPDATE_ITEM: "CALL tracker.updateItemAndReturnList(?,?,?,?,?,?,?)",
-    DELETE_ITEM: "CALL tracker.deleteItemAndReturnList(?,?)",
-    PURCHASE_ITEM: "CALL tracker.markItemPurchased(?,?,?,?)",
+    UPDATE_ITEM: "CALL tracker.updateItem(?,?,?,?,?,?,?,?,?)",
+    DELETE_ITEM: "CALL tracker.deleteItem(?,?)",
+    PURCHASE_ITEM: "CALL tracker.markItemPurchased(?,?,?,?,?)",
     RETRACT_PURCHASE: "CALL tracker.retractItemPurchase(?,?,?)",
-    GET_LIST_DETAILS_WITH_ITEMS: "CALL tracker.getMemberListDetailsWithItems(?)"
+    GET_LIST_DETAILS_WITH_ITEMS: "CALL tracker.getMemberListDetailsWithItems(?)",
+    GET_PURCHASE_STATS_BY_USER: "CALL tracker.getPurchaseSummaryByListForUser(?)"
 });
 
 export async function makeFormattedDataRequest(procedureName, data) {
@@ -49,9 +49,11 @@ export async function makeFormattedDataRequest(procedureName, data) {
 export async function findOne(procedureName, data) {
     try {
         let result = await makeFormattedDataRequest(procedureName, data);
-        if (result.length === 0) {
-            throw Error('No result found.');
+
+        if (result === undefined){
+            return
         }
+        
         return result[0];
     } catch (err) {
         console.log(err)
@@ -61,6 +63,11 @@ export async function findOne(procedureName, data) {
 export async function findMany(procedureName, data) {
     try {
         let result = await makeFormattedDataRequest(procedureName, data);
+
+        if (result === undefined){
+            return
+        }
+
         if (result.length === 0) {
             throw Error('No result found.');
         }
@@ -73,6 +80,10 @@ export async function findMany(procedureName, data) {
 export async function updateOne(procedureName, data) {
     try {
         const result = await makeFormattedDataRequest(procedureName, data);
+
+        if (result === undefined){
+            return
+        }
 
         if (result.length === 0) {
             throw Error('No result found.');
@@ -87,6 +98,11 @@ export async function updateOne(procedureName, data) {
 export async function createOne(procedureName, data) {
     try {
         let result = await makeFormattedDataRequest(procedureName, data);
+
+        if (result === undefined){
+            return
+        }
+
         if (result.length === 0) {
             throw Error('No result found.');
         }
@@ -99,6 +115,11 @@ export async function createOne(procedureName, data) {
 export async function deleteOne(procedureName, data) {
     try {
         const result = await makeFormattedDataRequest(procedureName, data);
+
+        if (result === undefined){
+            return
+        }
+
         return result.length === 0 ? null : result[0];
     } catch (err) {
         console.log(err)

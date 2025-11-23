@@ -8,7 +8,7 @@ import {findOne, updateOne, deleteOne, ProcedureType} from "../util/dataRequest.
 async function getUserOverview(userId, req) {
     try {
         const fetchResult = await findOne(ProcedureType.USER_DETAILS, [userId]);
-        logger.info("%o", new LogMessage("UserProfileImpl", "getUserOverview", "Successfully retrieved user."))
+        logger.info("%o", new LogMessage("UserProfileImpl", "getUserOverview", "Successfully retrieved user.",{"userInfo": userId}, req))
         return fetchResult
     } catch (err) {
         logger.info("%o", new LogMessage("UserProfileImpl", "getUserOverview", "Failed to retrieved user.", {"error": err}, req))
@@ -32,8 +32,8 @@ async function updateUser(requesterId, req) {
     }
 
     try {
-        let userData = [reqBody.userId, reqBody.firstName, reqBody.lastName, reqBody.email]
-        let updatedUser = await updateOne(ProcedureType.UPDATE_USER_RETURN_INFO, userData);
+        let userData = [reqBody.userId, reqBody.firstName, reqBody.lastName]
+        let updatedUser = await updateOne(ProcedureType.UPDATE_USER_INFO, userData);
 
         logger.info("%o", new LogMessage("UserProfileImpl", "updateUser", "Successfully updated user info.", {"userInfo": reqBody.userId}, req))
         return updatedUser
@@ -46,7 +46,7 @@ async function updateUser(requesterId, req) {
 // Error Sub Code: 3
 async function deleteUser(requesterId, userId) {
     if (requesterId !== userId) {
-        logger.warn("%o", new LogMessage("UserProfileImpl", "deleteUser", "Only user can delete themselves.", {"userInfo": reqBody.userId}, req))
+        logger.warn("%o", new LogMessage("UserProfileImpl", "deleteUser", "Only user can delete themselves.", {"userInfo": userId}, req))
         throw Error('User must delete their own account.')
     }
     try {
@@ -63,8 +63,7 @@ function updateUserValidation(data) {
     const schema = Joi.object({
         userId: Joi.string().required(),
         firstName: Joi.string().required(),
-        lastName: Joi.string().required(),
-        email: Joi.string().required()
+        lastName: Joi.string().required()
     })
     return schema.validate(data)
 }

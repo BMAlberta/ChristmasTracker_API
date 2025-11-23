@@ -1,7 +1,23 @@
 import appRoot from 'app-root-path';
-import winston from 'winston';
+import winston, { format } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
+import { namespace } from '../middleware/trace.mjs';
 const { combine, timestamp, printf, splat } = winston.format;
+
+
+
+
+const hookedFormat = format((info) => {
+    const traceId = namespace.get('traceId');
+
+    if (typeof traceId !== 'undefined') {
+        info.traceId = traceId;
+    } else {
+        info.traceId = "NO_TRACE_ID";
+    }
+
+    return info;
+});
 
 
 // define the custom settings for each transport (file, console)
@@ -27,7 +43,7 @@ const myFormat = printf(info => {
     // you can get splat attribute here as info[Symbol.for("splat")]
     // if you custom splat please rem splat() into createLogger()
 
-    return `{ timestamp: ${info.timestamp}, level: ${info.level.toUpperCase()}, data: ${JSON.stringify(formatMeta(info))}}`;
+    return `{ "timestamp": "${info.timestamp}", "traceId": "${info.traceId}", "level": "${info.level.toUpperCase()}", "data": ${JSON.stringify(formatMeta(info))}}`;
 });
 
 const formatMeta = (meta) => {
@@ -55,6 +71,7 @@ const dailyLogRoller = new (winston.transports.DailyRotateFile)({
 export var logger = winston.createLogger({
     format: combine(
         timestamp(),
+        hookedFormat(),
         splat(),
         myFormat
       ),

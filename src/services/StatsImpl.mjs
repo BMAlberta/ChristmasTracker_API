@@ -6,7 +6,7 @@ import {findMany, ProcedureType} from "../util/dataRequest.mjs";
 async function getPurchaseOverviews(userId, req) {
     try {
 
-        let aggregation = await getPurchaseOverviewsNew(userId)
+        let aggregation = await getPurchaseOverviewsNew(userId, req)
         logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Successfully calculated spending overviews.", {"userInfo": userId}, req))
         return aggregation
         
@@ -17,13 +17,13 @@ async function getPurchaseOverviews(userId, req) {
 }
 
 // Error Sub Code: 2
-async function getPurchaseOverviewsNew(userId) {
+async function getPurchaseOverviewsNew(userId, req) {
     try {
         let fetchResult = await findMany(ProcedureType.PURCHASE_SUMMARY_BY_LIST, [userId])
-        logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Successfully calculated spending overviews.", {"userInfo": userId}))
+        logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Successfully calculated spending overviews.", {"userInfo": userId}, req))
         return fetchResult
     } catch (err) {
-        logger.warn("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Unable calculate spending overviews", {"error": err}))
+        logger.warn("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Unable calculate spending overviews", {"error": err}, req))
         throw err
     }
 }

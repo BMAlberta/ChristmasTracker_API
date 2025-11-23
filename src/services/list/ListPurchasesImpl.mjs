@@ -24,8 +24,7 @@ async function purchaseItem(userId, req) {
                 throw Error('Requestor cannot be the owner.')
             }
 
-            let updatedList = await updateOne(ProcedureType.PURCHASE_ITEM, [reqBody.itemId, reqBody.listId, reqBody.quantityPurchased, userId])
-            // sanitizeListAttributes(updatedList, userId)
+            let updatedList = await updateOne(ProcedureType.PURCHASE_ITEM, [reqBody.itemId, reqBody.listId, reqBody.quantityPurchased, reqBody.purchasePrice, userId])
             logger.info("%o", new LogMessage("ListPurchasesImpl", "purchaseItem", "Successfully marked item as purchased.", {
                 "listInfo": reqBody.listId, "itemInfo": reqBody.itemId
             }, req))
@@ -83,7 +82,6 @@ async function retractItemPurchase(userId, req) {
             logger.info("%o", new LogMessage("ListPurchasesImpl", "retractItemPurchase", "Successfully retracted purchase.", {
                 "listInfo": reqBody.listId, "itemInfo": reqBody.itemId, "userInfo": userId
             }, req))
-            sanitizeListAttributes(updatedList, userId)
             return updatedList
         }
     } catch (err) {
@@ -96,7 +94,8 @@ function purchaseDataValidation(data) {
     const schema = Joi.object({
         listId: Joi.string().min(36).max(36).required(),
         itemId: Joi.string().min(36).max(36).required(),
-        quantityPurchased: Joi.number().integer()
+        quantityPurchased: Joi.number().integer(),
+        purchasePrice: Joi.number()
     })
     return schema.validate(data);
 }

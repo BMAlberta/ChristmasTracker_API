@@ -1,5 +1,4 @@
 import sessionManager from 'express-session';
-import { getDbConnection} from '../config/db.mjs';
 import { logger, LogMessage } from '../config/winston.mjs';
 import MemcachedStoreFactory from 'connect-memjs';
 
@@ -21,6 +20,7 @@ export async function createSessionStore() {
 		cookie: {
 			maxAge: 1800000
 		},
+        rolling: true,
 		store: store,
 		resave: true,
 		saveUninitialized: false
@@ -39,7 +39,7 @@ export function validateAuth(request, response, next) {
 	} else {
 		logger.info("%o", new LogMessage("SessionManager", "validateAuth", "Session validated.", {
 			"sessionInfo": request.session.details
-		}))
+		}, request))
 		next();
 	}
 }
@@ -65,12 +65,12 @@ export function getUser(req, res, next) {
 		res.userId = user.toString()
 		logger.info("%o", new LogMessage("Validate Token", "getUser", "Found user.", {
 			"userInfo": user
-		}))
+		}, req))
 		next()
 	} else {
 		logger.warn("%o", new LogMessage("Validate Token", "getUser", "Unable to locate user.", {
 			"userInfo": user
-		}))
+		}, req))
 		return res.status(500).json({
 			message: "Unable to find a user"
 		})
