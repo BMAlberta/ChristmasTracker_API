@@ -53,7 +53,7 @@ export async function findOne(procedureName, data) {
         if (result === undefined){
             return
         }
-        
+
         return result[0];
     } catch (err) {
         console.log(err)
@@ -68,9 +68,6 @@ export async function findMany(procedureName, data) {
             return
         }
 
-        if (result.length === 0) {
-            throw Error('No result found.');
-        }
         return result;
     } catch (err) {
         console.log(err)

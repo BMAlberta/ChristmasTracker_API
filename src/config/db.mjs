@@ -41,11 +41,11 @@ export async function getDbConnection() {
         let connection = await connectionPool.getConnection();
         // logger.info(
         //     "%o",
-            // new LogMessage("DB", "Connect", "Connection returned.", {
-            //     "totalConnections": connectionPool.totalConnections(),
-            //     "activeConnections": connectionPool.activeConnections(),
-            //     "idleConnections:": connectionPool.idleConnections()
-            // }))
+        //     new LogMessage("DB", "Connect", "Connection returned.", {
+        //         "totalConnections": connectionPool.totalConnections(),
+        //         "activeConnections": connectionPool.activeConnections(),
+        //         "idleConnections:": connectionPool.idleConnections()
+        //     }))
         return connection
     } catch (err) {
         throw Error(err)

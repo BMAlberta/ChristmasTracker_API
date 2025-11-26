@@ -77,7 +77,12 @@ async function getListDetailsWithItems(userId, req) {
     try {
 
         let fetchResult = await findMany(ProcedureType.GET_LIST_DETAILS_WITH_ITEMS, [userId])
-        sanitizeOverviewListAttributes(fetchResult, userId)
+        if (fetchResult !== undefined) {
+            sanitizeOverviewListAttributes(fetchResult, userId)
+        } else {
+            fetchResult = []
+        }
+
         logger.info("%o", new LogMessage("ListDetailImpl", "getListDetailsWithItems", "Successfully fetched overviews.", {"userInfo": userId}, req))
         return fetchResult
     } catch (err) {

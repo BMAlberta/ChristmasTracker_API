@@ -30,8 +30,8 @@ router.delete("/:id", util.getUser, async (req, res) => {
 
 router.get("/metadata/list", util.getUser, async (req, res) => {
     try {
-        const userMatadata = await UserProfileServiceImpl.getUserOverview(res.userId, req)
-        res.json(new DataResponse({ userMatadata }))
+        const userMetadata = await UserProfileServiceImpl.getUserOverview(res.userId, req)
+        res.json(new DataResponse({ userMetadata }))
     } catch (err) {
         res.status(500).json(new ErrorResponse(err.message));
     }
