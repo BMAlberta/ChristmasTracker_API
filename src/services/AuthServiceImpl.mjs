@@ -100,8 +100,8 @@ async function updatePassword(requester, req) {
     }
 
     try {
-        const validOldPassword = await bcrypt.compare(reqBody.oldPassword, user.pwd)
         const user = await findOne(ProcedureType.PASSWORD_INFO, requester)
+        const validOldPassword = await bcrypt.compare(reqBody.oldPassword, user.password)
 
         if (!validOldPassword) {
             logger.warn("%o", new LogMessage("AuthServiceImpl", "updatePassword", "Password validation failed.", { "userId": user.userId}, req))
@@ -112,12 +112,12 @@ async function updatePassword(requester, req) {
         let saltedPassword = await generatePassword(reqBody.newPassword)
         // let saltedPassword = reqBody.newPassword
 
-        await updateOne(ProcedureType.UPDATE_PASSWORD, [requester, saltedPassword])
+        let result = await updateOne(ProcedureType.UPDATE_PASSWORD, [requester, saltedPassword])
 
         logger.debug("%o", new LogMessage("AuthServiceImpl", "updatePassword", "Update password successful.", { "userId": user.userId}, req))
-        return user
+        return result
     } catch (err) {
-        logger.warn("%o", new LogMessage("AuthServiceImpl", "doLogout", "Change password failed.", { "error": err},req))
+        logger.warn("%o", new LogMessage("AuthServiceImpl", "updatePassword ", "Change password failed.", { "error": err},req))
         // throw err
         throw new TrackerError("1.10", "Password update failed.")
     }
