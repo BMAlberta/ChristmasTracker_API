@@ -19,7 +19,7 @@ export async function createSessionStore() {
 	let sessionStore = sessionManager({
 		secret: process.env.SESSION_SECRET,
 		cookie: {
-			maxAge: 1800000
+			maxAge: 3600000,
 		},
         rolling: true,
 		store: store,

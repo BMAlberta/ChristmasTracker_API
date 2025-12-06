@@ -69,6 +69,15 @@ router.post("/logout", async (req, res) => {
     }
 })
 
+router.get("/ping", util.validateAuth, async (req, res) => {
+    try {
+        res.json(new DataResponse({"status": "success"}))
+    } catch (err) {
+        res.status(401).json(new ErrorResponse(err));
+    }
+})
+
+
 /**
    * @swagger
    * /auth/password/update:

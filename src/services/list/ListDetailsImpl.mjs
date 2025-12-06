@@ -2,6 +2,8 @@ import { logger, LogMessage } from '../../config/winston.mjs';
 import {sanitizeListAttributes, sanitizeOverviewListAttributes} from '../../util/sanitizeItems.mjs'
 import Joi from '@hapi/joi';
 import {findMany, findOne, createOne, deleteOne, ProcedureType, updateOne} from "../../util/dataRequest.mjs";
+import axios from "axios";
+import * as cheerio from 'cheerio';
 
 // Error Domain: 7
 
@@ -173,6 +175,43 @@ async function deleteItemFromList(req, userId) {
     }
 }
 
+async function fetchImageUrlForItem(req, userId) {
+    const url = req.body.itemUrl;
+
+    try {
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36',
+                'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'sec-fetch-dest':'document',
+                'Content-Type':'text/html; charset=utf-8'
+            }
+        })
+        const $ = cheerio.load(response.data);
+
+        const allImages = $('img').toArray();
+        const ogImage = $('meta[property="og:image"]').attr('content');
+        const twitterImage = $('meta[name="twitter:image"]').attr('content');
+        const firstImg = $('img').first().attr('src');
+
+        const amazonFilteredImages = allImages.filter(div => div.attribs.id === 'landingImage');
+        let amazonImage
+        if (amazonFilteredImages.length > 0) {
+            amazonImage = amazonFilteredImages[0].attribs.src
+        }
+        const imageUrl = amazonImage || ogImage || twitterImage || firstImg;
+        return imageUrl
+
+    } catch (err) {
+        logger.warn("%o", new LogMessage("ListDetailsImpl", "fetchImageUrlForItem", "Unable to fetch image for item.", {
+            "itemInfo": itemId, "userInfo": userId, "error": err.message
+        }, req))
+        throw err
+    }
+
+
+}
+
 function newItemValidation(data) {
     const schema = Joi.object({
         name: Joi.string(),
@@ -205,7 +244,7 @@ function newOffListItemValidation(data) {
 function updateItemValidation(data) {
     const schema = Joi.object({
         name: Joi.string().required(),
-        description: Joi.string().required(),
+        description: Joi.string().allow(null),
         link: Joi.string().required(),
         price: Joi.number().required(),
         quantity: Joi.number().integer().required(),
@@ -218,4 +257,4 @@ function updateItemValidation(data) {
 }
 
 
-export default {addNewItemToList, getOverviewsForList, updateItem, deleteItemFromList, getListDetailsWithItems};
+export default {addNewItemToList, getOverviewsForList, updateItem, deleteItemFromList, getListDetailsWithItems, fetchImageUrlForItem};
