@@ -42,4 +42,14 @@ router.delete('/:id', util.getUser, async (req, res) => {
     }
 })
 
+router.post('/fetch-image', async (req, res) => {
+
+    try {
+        let imageUrl = await DetailImpl.fetchImageUrlForItem(req, res.userId)
+        res.json(new DataResponse({imageUrl}));
+    } catch (err) {
+        res.status(500).json(new ErrorResponse(err.message));
+    }
+});
+
 export default router;
