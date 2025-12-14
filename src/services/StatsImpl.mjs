@@ -20,11 +20,21 @@ async function getPurchaseOverviews(userId, req) {
 async function getPurchaseOverviewsNew(userId, req) {
     try {
         let fetchResult = await findMany(ProcedureType.PURCHASE_SUMMARY_BY_LIST, [userId])
+        formatStatsModel(fetchResult);
         logger.info("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Successfully calculated spending overviews.", {"userInfo": userId}, req))
         return fetchResult
     } catch (err) {
         logger.warn("%o", new LogMessage("StatsImpl", "getPurchaseOverviews", "Unable calculate spending overviews", {"error": err}, req))
         throw err
+    }
+}
+
+function formatStatsModel(model) {
+    if (Array.isArray(model)) {
+        model.forEach(stat => {
+            stat.purchaseYear = String(stat.purchaseYear)
+            stat.itemPurchased = Number(stat.itemPurchased)
+        })
     }
 }
 
